@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
+using SimulationObjects;
 namespace WarehouseSimulation
 {
     /// <summary>
@@ -23,6 +23,10 @@ namespace WarehouseSimulation
         public MainWindow()
         {
             InitializeComponent();
+            var fakeDays = new List<DateTime>();
+            var sim = SimulationFactory.DefaultSimulation(fakeDays);
+
+            sim.Run();
         }
     }
 }

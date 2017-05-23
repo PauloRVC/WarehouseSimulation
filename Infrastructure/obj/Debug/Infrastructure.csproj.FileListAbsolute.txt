@@ -1,0 +1,5 @@
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.pdb
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csprojResolveAssemblyReference.cache
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.pdb

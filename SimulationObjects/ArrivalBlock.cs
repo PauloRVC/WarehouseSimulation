@@ -8,9 +8,21 @@ namespace SimulationObjects
 {
     public class ArrivalBlock
     {
-        public IEvent GetNextEvent()
+        private IDistribution<int> ArrivalTimeDist;
+        private IDistribution<IProcessBlock> DestinationDist;
+        private Simulation Simulation;
+        public ArrivalBlock(IDistribution<int> arrivalTimeDist, IDistribution<IProcessBlock> destinationDist, Simulation simulation)
         {
-            throw new NotImplementedException();
+            ArrivalTimeDist = arrivalTimeDist;
+            DestinationDist = destinationDist;
+            Simulation = simulation;
+        }
+        public Arrival GetNextEvent()
+        {
+            var Destination = DestinationDist.DrawNext();
+            var Batch = new Batch(Destination);
+            var Time = Simulation.CurrentTime + ArrivalTimeDist.DrawNext();
+            return new Arrival(Batch, Time);
         }
     }
 }

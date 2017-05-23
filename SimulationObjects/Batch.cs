@@ -8,6 +8,10 @@ namespace SimulationObjects
 {
     public class Batch
     {
-        public IProcessBlock Destination { get; private set; }
+        public IProcessBlock Destination { get; set; }
+        public Batch(IProcessBlock destination)
+        {
+            Destination = destination;
+        }
     }
 }
