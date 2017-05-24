@@ -18,3 +18,23 @@ C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Simu
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.csprojResolveAssemblyReference.cache
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.dll
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.dll.config
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\SimulationObjects.dll.config
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\SimulationObjects.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\SimulationObjects.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Extensions.Core.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Extensions.Math.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Extensions.Statistics.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Math.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Statistics.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\DotImaging.Primitives2D.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Extensions.Core.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Extensions.Math.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Extensions.Statistics.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Math.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Accord.Statistics.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.csprojResolveAssemblyReference.cache
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.pdb

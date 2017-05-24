@@ -3,3 +3,16 @@ C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infr
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csprojResolveAssemblyReference.cache
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.dll
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.dll.config
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csprojResolveAssemblyReference.cache
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration.resources
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csproj.GenerateResource.Cache
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration2.resources
