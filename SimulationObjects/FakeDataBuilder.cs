@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Infrastructure.Models;
 
 namespace SimulationObjects
 {
@@ -24,12 +25,12 @@ namespace SimulationObjects
 
             return new EmpiricalDist(FakeIntData);
         }
-
-        public IDistribution<IProcessBlock> BuildDestinationDist(List<DateTime> selectedDays)
+        
+        public IDistribution<IProcessBlock> BuildDestinationDist(List<DateTime> selectedDays, Dictionary<Location, IProcessBlock> processBlocks)
         {
             return new DestinationDist(FakeDestData);
         }
-        
+
         public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays, Process process)
         {
             var FakeIntData = new List<Tuple<double, int>>()
@@ -40,6 +41,11 @@ namespace SimulationObjects
                 new Tuple<double, int>(.2,7)
             };
             return new EmpiricalDist(FakeIntData);
+        }
+        public IDistribution<int> BuildRecircTimeDist(List<DateTime> selectedDays)
+        {
+            //Faking recirc time with constant 30s
+            return new EmpiricalDist(new List<Tuple<double, int>>() { new Tuple<double, int>(1, 30) });
         }
     }
 }

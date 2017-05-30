@@ -55,6 +55,10 @@
     <Compile Include="Migrations\201705242054430_InitialMigration2.Designer.cs">
       <DependentUpon>201705242054430_InitialMigration2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201705301422345_NullablePickPutTimes.cs" />
+    <Compile Include="Migrations\201705301422345_NullablePickPutTimes.Designer.cs">
+      <DependentUpon>201705301422345_NullablePickPutTimes.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Batch.cs" />
     <Compile Include="Models\BatchScan.cs" />
@@ -75,6 +79,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201705242054430_InitialMigration2.resx">
       <DependentUpon>201705242054430_InitialMigration2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201705301422345_NullablePickPutTimes.resx">
+      <DependentUpon>201705301422345_NullablePickPutTimes.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

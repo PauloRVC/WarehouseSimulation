@@ -55,3 +55,6 @@ C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Deb
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.csproj.GenerateResource.Cache
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.exe
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.dll.config

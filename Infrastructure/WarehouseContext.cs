@@ -8,10 +8,24 @@ using Infrastructure.Models;
 
 namespace Infrastructure
 {
-    public class WarehouseContext : DbContext
+    internal class WarehouseContext : DbContext
     {
         public DbSet<BatchScan> BatchScans { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Location> Locations { get; set; }
+        public Location Scanner901
+        {
+            get { return Locations.Where(x => x.ScannerIndicator == "901").First(); }
+        }
+        public List<DateTime> FirstArrivals(Location location, DateTime day)
+        {
+            var daysBatchScans = BatchScans.Where(x => x.Timestamp.DayOfYear == day.DayOfYear 
+                                                    && x.Timestamp.Year == day.Year
+                                                    && x.CurrentLocation == location);
+
+            //Keep only the first arrival for each batch
+            return daysBatchScans.GroupBy(x => x.Batch).Select(x => x.OrderBy(y => y.Timestamp).First().Timestamp).OrderBy(x => x).ToList();
+        }
         public WarehouseContext() : base("WarehouseAnalytics")
         {
             Database.SetInitializer<WarehouseContext>(null);
@@ -34,6 +48,63 @@ namespace Infrastructure
             modelBuilder.Entity<OrderItem>().HasKey(x => new { x.OrderID, x.ItemID });
             modelBuilder.Entity<BatchScan>().HasKey(x => new { x.BatchID, x.CurrentLocationID, x.Timestamp });
                 
+        }
+
+    }
+    public class WarehouseData
+    {
+        private WarehouseContext db = new WarehouseContext();
+        public Location Scanner901
+        {
+            get
+            {
+               return db.Locations.Where(x => x.ScannerIndicator == "901").First();
+            }
+        }
+        public Location P06
+        {
+            get
+            {
+                return db.Locations.Where(x => x.ScannerIndicator == "P06").First();
+            }
+        }
+        public List<BatchScan> FirstArrivals(Location location, DateTime day)
+        {
+            var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
+                                                                && x.CurrentLocation.LocationID == location.LocationID);
+
+            //Keep only the first arrival for each batch
+            return daysBatchScans.GroupBy(x => x.Batch).Select(x => x.OrderBy(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).
+                Include(x => x.ActualDestination).Include(x => x.CurrentLocation).Include(x => x.IntendedDestination).ToList();
+        }
+        public  List<BatchScan> LastArrivals(Location location, DateTime day)
+        {
+            var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
+                                                                && x.CurrentLocation.LocationID == location.LocationID);
+
+            //Keep only the first arrival for each batch
+            return daysBatchScans.GroupBy(x => x.Batch).Select(x => x.OrderByDescending(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).ToList();
+        }
+        public  List<Tuple<int, DateTime>> LastPutTimes(DateTime day, List<int> batchIDs)
+        {
+            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue 
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID));
+
+
+            return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+        }
+        public  List<DateTime> GetBatchScanAvailability()
+        {
+            return db.BatchScans.Select(x => DbFunctions.TruncateTime(x.Timestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
+        }
+        public  List<DateTime> GetPutTimeAvailability()
+        {
+            return db.OrderItems.Where(x => x.PutTimestamp.HasValue).Select(x => DbFunctions.TruncateTime(x.PutTimestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
+        }
+        public  List<DateTime> GetOverallAvailability()
+        {
+            return GetBatchScanAvailability().Intersect(GetPutTimeAvailability()).ToList();
         }
     }
 }

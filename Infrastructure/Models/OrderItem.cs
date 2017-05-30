@@ -27,10 +27,10 @@ namespace Infrastructure.Models
         /// <summary>
         /// The time which this item belonging to this order was picked.
         /// </summary>
-        public DateTime PickTimestamp { get; set; }
+        public DateTime? PickTimestamp { get; set; }
         /// <summary>
         /// The time which this item belonging to this order was put.
         /// </summary>
-        public DateTime PutTimestamp { get; set; }
+        public DateTime? PutTimestamp { get; set; }
     }
 }

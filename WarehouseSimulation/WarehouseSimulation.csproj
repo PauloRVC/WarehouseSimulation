@@ -122,6 +122,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj">
+      <Project>{2c43586b-168c-473f-976c-b2150600ac6f}</Project>
+      <Name>Infrastructure</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SimulationObjects\SimulationObjects.csproj">
       <Project>{c5540a96-5054-4069-85ef-26fc86ed928a}</Project>
       <Name>SimulationObjects</Name>

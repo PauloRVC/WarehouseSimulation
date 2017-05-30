@@ -1,14 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseSimulation", "WarehouseSimulation\WarehouseSimulation.csproj", "{FCA03D22-83AF-4773-845A-217FCBEB1BEE}"
 	ProjectSection(ProjectDependencies) = postProject
+		{2C43586B-168C-473F-976C-B2150600AC6F} = {2C43586B-168C-473F-976C-B2150600AC6F}
 		{C5540A96-5054-4069-85EF-26FC86ED928A} = {C5540A96-5054-4069-85EF-26FC86ED928A}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimulationObjects", "SimulationObjects\SimulationObjects.csproj", "{C5540A96-5054-4069-85EF-26FC86ED928A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2C43586B-168C-473F-976C-B2150600AC6F} = {2C43586B-168C-473F-976C-B2150600AC6F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{2C43586B-168C-473F-976C-B2150600AC6F}"
 EndProject

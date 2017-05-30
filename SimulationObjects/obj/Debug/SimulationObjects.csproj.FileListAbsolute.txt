@@ -38,3 +38,8 @@ C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.csprojResolveAssemblyReference.cache
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.dll
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.dll
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.pdb
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.dll.config
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.xml

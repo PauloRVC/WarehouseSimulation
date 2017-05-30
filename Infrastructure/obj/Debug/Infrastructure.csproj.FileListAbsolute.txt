@@ -16,3 +16,4 @@ C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\In
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration.resources
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csproj.GenerateResource.Cache
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration2.resources
+C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.NullablePickPutTimes.resources

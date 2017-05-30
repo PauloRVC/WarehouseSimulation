@@ -16,10 +16,7 @@ namespace Infrastructure.Models
         /// The unique batch indicator used in the production db.
         /// </summary>
         public string BatchIndicator { get; set; }
-        /// <summary>
-        /// The time in which this batch was introduced into the system.
-        /// </summary>
-        public DateTime CreationTime { get; set; }
+        
         /// <summary>
         /// The orders that belong to this batch.
         /// </summary>
