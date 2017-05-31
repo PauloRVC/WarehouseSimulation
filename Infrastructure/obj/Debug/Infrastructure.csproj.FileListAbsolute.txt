@@ -17,3 +17,12 @@ C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\In
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csproj.GenerateResource.Cache
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration2.resources
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.NullablePickPutTimes.resources
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.dll.config
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.xml
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration.resources
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.InitialMigration2.resources
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.Migrations.NullablePickPutTimes.resources
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csproj.GenerateResource.Cache

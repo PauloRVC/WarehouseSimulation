@@ -28,6 +28,8 @@ namespace SimulationObjects
 
             IDistributionBuilder distBuilder = new RealDistributionBuilder();
 
+            distBuilder.Logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+
             IProcessBlock disposalBlock = new DisposalBlock();
 
             Simulation simulation = new Simulation();

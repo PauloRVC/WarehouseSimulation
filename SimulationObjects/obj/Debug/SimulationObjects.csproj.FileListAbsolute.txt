@@ -43,3 +43,7 @@ C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.pdb
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.dll.config
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.xml
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.pdb
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.xml

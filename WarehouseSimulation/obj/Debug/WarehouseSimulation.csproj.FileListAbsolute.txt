@@ -58,3 +58,9 @@ C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Deb
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.dll
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.pdb
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.dll.config
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.dll
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.pdb
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.xml
+C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.SqlServer.xml

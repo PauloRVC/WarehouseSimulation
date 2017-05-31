@@ -11,6 +11,9 @@ namespace SimulationObjects
     public class RealDistributionBuilder : IDistributionBuilder
     {
         private WarehouseData data = new WarehouseData();
+
+        public ILogger Logger { get; set; } = new NullLogger();
+
         public IDistribution<int> BuildArrivalDist(List<DateTime> selectedDays)
         {
 
@@ -19,6 +22,7 @@ namespace SimulationObjects
             var scanner901 = data.Scanner901;
 
             //For each day, find the ordered list of the time first arrival of each batch at scanner 901
+            int j = 1;
             foreach(DateTime day in selectedDays)
             {
                 var todaysArrivals = data.FirstArrivals(scanner901, day).Select(x => x.Timestamp).OrderBy(x => x).ToList();
@@ -31,6 +35,10 @@ namespace SimulationObjects
                 }
 
                 interArrivalList.Add(todaysInterArrivalTimes);
+
+                Logger.LogDistribution("ArrivalDistDay" + j, todaysInterArrivalTimes);
+
+                j++;
             }
 
             var allObservations = interArrivalList.SelectMany(x => x);
@@ -57,11 +65,16 @@ namespace SimulationObjects
 
             var scanner901 = data.Scanner901;
 
+            int j = 1;
             foreach (DateTime day in selectedDays)
             {
                 var todaysArrivals = data.FirstArrivals(scanner901, day).Select(x => x.IntendedDestination).ToList();
                 
                 destinationList.Add(todaysArrivals);
+
+                Logger.LogDistribution("DestinationDist" + j, todaysArrivals);
+
+                j++;
             }
 
             var allObservations = destinationList.SelectMany(x => x);
@@ -93,6 +106,8 @@ namespace SimulationObjects
 
             var scanner901 = data.Scanner901;
 
+            int j = 1;
+
             foreach (DateTime day in selectedDays)
             {
                 //Get the last batchscan at 901
@@ -108,6 +123,10 @@ namespace SimulationObjects
                 var processTimes = timePairs.Select(x => (int)x.lastPutTime.Subtract(x.arrivalTime).TotalSeconds).ToList();
 
                 pTimeList.Add(processTimes);
+
+                Logger.LogDistribution("ProcessTimeDist" + j, processTimes);
+
+                j++;
             }
 
             var allObservations = pTimeList.SelectMany(x => x).ToList();

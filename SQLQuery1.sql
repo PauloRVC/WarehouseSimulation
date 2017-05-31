@@ -1,0 +1,1 @@
+﻿SELECT TOP(1000) * FROM BatchScans WHERE DATEPART(DD, [Timestamp]) = 9 ORDER BY [Timestamp]

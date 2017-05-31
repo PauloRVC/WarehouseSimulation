@@ -11,7 +11,7 @@ namespace SimulationObjects
     {
         public List<Tuple<double, IProcessBlock>> FakeDestData { get; set; }
 
-        
+        public ILogger Logger { get; set; } = new NullLogger();
 
         public IDistribution<int> BuildArrivalDist(List<DateTime> selectedDays)
         {

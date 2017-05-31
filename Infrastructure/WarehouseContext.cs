@@ -74,7 +74,7 @@ namespace Infrastructure
                                                                 && x.CurrentLocation.LocationID == location.LocationID);
 
             //Keep only the first arrival for each batch
-            return daysBatchScans.GroupBy(x => x.Batch).Select(x => x.OrderBy(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).
+            return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderBy(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).
                 Include(x => x.ActualDestination).Include(x => x.CurrentLocation).Include(x => x.IntendedDestination).ToList();
         }
         public  List<BatchScan> LastArrivals(Location location, DateTime day)
@@ -83,12 +83,12 @@ namespace Infrastructure
                                                                 && x.CurrentLocation.LocationID == location.LocationID);
 
             //Keep only the first arrival for each batch
-            return daysBatchScans.GroupBy(x => x.Batch).Select(x => x.OrderByDescending(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).ToList();
+            return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderByDescending(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).ToList();
         }
         public  List<Tuple<int, DateTime>> LastPutTimes(DateTime day, List<int> batchIDs)
         {
             var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue 
-                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Datke
                                                 && batchIDs.Contains(x.Order.BatchID));
 
 

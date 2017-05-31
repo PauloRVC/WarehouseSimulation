@@ -9,6 +9,7 @@ namespace SimulationObjects
 {
     public interface IDistributionBuilder
     {
+        ILogger Logger { get; set; }
         IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays, Process process);
         IDistribution<int> BuildArrivalDist(List<DateTime> selectedDays);
         IDistribution<int> BuildRecircTimeDist(List<DateTime> selectedDays);
