@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ILogger.cs" />
     <Compile Include="Migrations\201705242049589_InitialMigration.cs" />
     <Compile Include="Migrations\201705242049589_InitialMigration.Designer.cs">
       <DependentUpon>201705242049589_InitialMigration.cs</DependentUpon>
@@ -66,6 +67,7 @@
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="Models\Location.cs" />
+    <Compile Include="NullLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WarehouseContext.cs" />
   </ItemGroup>

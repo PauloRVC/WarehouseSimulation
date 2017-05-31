@@ -82,10 +82,8 @@
     <Compile Include="IDistribution.cs" />
     <Compile Include="IDistributionBuilder.cs" />
     <Compile Include="IEvent.cs" />
-    <Compile Include="ILogger.cs" />
     <Compile Include="IProcessBlock.cs" />
     <Compile Include="NonPutwallLane.cs" />
-    <Compile Include="NullLogger.cs" />
     <Compile Include="Processor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Putwall.cs" />

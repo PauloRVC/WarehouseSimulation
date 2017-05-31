@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,7 +22,9 @@ namespace SimulationObjects
         {
             var Destination = DestinationDist.DrawNext();
             var Batch = new Batch(Destination);
-            var Time = Simulation.CurrentTime + ArrivalTimeDist.DrawNext();
+            int dur = ArrivalTimeDist.DrawNext();
+            Debug.Print(dur + "\n");
+            var Time = Simulation.CurrentTime + dur;
             return new Arrival(Batch, Time);
         }
     }

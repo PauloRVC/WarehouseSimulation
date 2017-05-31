@@ -12,8 +12,21 @@ namespace SimulationObjects
     {
         private WarehouseData data = new WarehouseData();
 
-        public ILogger Logger { get; set; } = new NullLogger();
+        private ILogger logger;
+        public ILogger Logger
+        {
+            get { return logger; }
+            set
+            {
+                logger = value;
+                data.Logger = value;
+            }
+        } 
 
+        public RealDistributionBuilder()
+        {
+            logger = new NullLogger();
+        }
         public IDistribution<int> BuildArrivalDist(List<DateTime> selectedDays)
         {
 

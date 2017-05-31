@@ -17,15 +17,6 @@ namespace Infrastructure
         {
             get { return Locations.Where(x => x.ScannerIndicator == "901").First(); }
         }
-        public List<DateTime> FirstArrivals(Location location, DateTime day)
-        {
-            var daysBatchScans = BatchScans.Where(x => x.Timestamp.DayOfYear == day.DayOfYear 
-                                                    && x.Timestamp.Year == day.Year
-                                                    && x.CurrentLocation == location);
-
-            //Keep only the first arrival for each batch
-            return daysBatchScans.GroupBy(x => x.Batch).Select(x => x.OrderBy(y => y.Timestamp).First().Timestamp).OrderBy(x => x).ToList();
-        }
         public WarehouseContext() : base("WarehouseAnalytics")
         {
             Database.SetInitializer<WarehouseContext>(null);
@@ -54,6 +45,7 @@ namespace Infrastructure
     public class WarehouseData
     {
         private WarehouseContext db = new WarehouseContext();
+        public ILogger Logger { get; set; } = new NullLogger();
         public Location Scanner901
         {
             get
@@ -88,7 +80,7 @@ namespace Infrastructure
         public  List<Tuple<int, DateTime>> LastPutTimes(DateTime day, List<int> batchIDs)
         {
             var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue 
-                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Datke
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID));
 
 

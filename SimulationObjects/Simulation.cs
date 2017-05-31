@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,6 +44,7 @@ namespace SimulationObjects
                 if (newEvent.IsArrival)
                 {
                     nextEvent = ArrivalBlock.GetNextEvent();
+
                     if (nextEvent != null)
                         EventQueue.Add(nextEvent);
                 }
