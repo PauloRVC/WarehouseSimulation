@@ -1,22 +1,21 @@
-﻿using System;
+﻿using SimulationObjects.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Events
 {
-    public class EndProcessEvent : IEvent
+    class GenericEvent : IEvent
     {
-        private Processor Resource;
-        public EndProcessEvent(Processor resource, Batch batch, int time)
+        public GenericEvent(IEntity batch, int time)
         {
-            Resource = resource;
-            Batch = batch;
+            Entity = batch;
             IsArrival = false;
             Time = time;
         }
-        public Batch Batch
+        public IEntity Entity
         {
             get; private set;
         }
@@ -30,10 +29,9 @@ namespace SimulationObjects
         {
             get; private set;
         }
-
         public void Conclude()
         {
-            Resource.IsBusy = false;
+            // do nothing, recirculate
         }
     }
 }

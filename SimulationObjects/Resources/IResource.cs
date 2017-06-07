@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Resources
 {
-    public class Processor
+    public interface IResource
     {
-        public bool IsBusy { get; set; }
     }
 }

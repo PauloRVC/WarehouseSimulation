@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Distributions
 {
     public interface IDistribution<T>
     {

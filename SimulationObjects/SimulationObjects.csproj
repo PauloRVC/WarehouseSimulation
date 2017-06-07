@@ -71,27 +71,35 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Arrival.cs" />
-    <Compile Include="ArrivalBlock.cs" />
-    <Compile Include="Batch.cs" />
-    <Compile Include="DisposalBlock.cs" />
-    <Compile Include="EmpiricalDist.cs" />
-    <Compile Include="EndProcessEvent.cs" />
-    <Compile Include="FakeDataBuilder.cs" />
-    <Compile Include="GenericEvent.cs" />
-    <Compile Include="IDistribution.cs" />
-    <Compile Include="IDistributionBuilder.cs" />
-    <Compile Include="IEvent.cs" />
-    <Compile Include="IProcessBlock.cs" />
-    <Compile Include="NonPutwallLane.cs" />
-    <Compile Include="Processor.cs" />
+    <Compile Include="Entities\IEntity.cs" />
+    <Compile Include="Events\Arrival.cs" />
+    <Compile Include="Events\RecirculateEvent.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Resources\IResource.cs" />
+    <Compile Include="Results\ISimResults.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\ArrivalBlock.cs" />
+    <Compile Include="Entities\Batch.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\MultiArrivalBlock.cs" />
+    <Compile Include="SimBlocks\DisposalBlock.cs" />
+    <Compile Include="Distributions\EmpiricalDist.cs" />
+    <Compile Include="Events\EndProcessEvent.cs" />
+    <Compile Include="Distributions\FakeDataBuilder.cs" />
+    <Compile Include="Events\GenericEvent.cs" />
+    <Compile Include="Distributions\IDistribution.cs" />
+    <Compile Include="Distributions\IDistributionBuilder.cs" />
+    <Compile Include="Events\IEvent.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\IDestinationBlock.cs" />
+    <Compile Include="SimBlocks\ISimBlock.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\NonPutwallLane.cs" />
+    <Compile Include="Resources\Processor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Putwall.cs" />
-    <Compile Include="RealDistributionBuilder.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\Putwall.cs" />
+    <Compile Include="Distributions\RealDistributionBuilder.cs" />
+    <Compile Include="SimBlocks\SimBlock.cs" />
     <Compile Include="Simulation.cs" />
     <Compile Include="SimulationFactory.cs" />
-    <Compile Include="SimulationResults.cs" />
-    <Compile Include="VerboseLogger.cs" />
+    <Compile Include="Results\SimulationResults.cs" />
+    <Compile Include="Utils\VerboseLogger.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

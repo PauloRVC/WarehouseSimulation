@@ -5,14 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Infrastructure;
 using Infrastructure.Models;
+using SimulationObjects.SimBlocks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Distributions
 {
     public class RealDistributionBuilder : IDistributionBuilder
     {
         private WarehouseData data = new WarehouseData();
 
         private ILogger logger;
+
+        private Simulation Simulation;
         public ILogger Logger
         {
             get { return logger; }
@@ -23,9 +26,10 @@ namespace SimulationObjects
             }
         } 
 
-        public RealDistributionBuilder()
+        public RealDistributionBuilder(Simulation simulation)
         {
             logger = new NullLogger();
+            Simulation = simulation;
         }
         public IDistribution<int> BuildArrivalDist(List<DateTime> selectedDays)
         {
@@ -72,7 +76,9 @@ namespace SimulationObjects
 
         }
 
-        public IDistribution<IProcessBlock> BuildDestinationDist(List<DateTime> selectedDays, Dictionary<Location, IProcessBlock> processBlocks)
+        public IDistribution<IDestinationBlock> BuildDestinationDist(List<DateTime> selectedDays, 
+                                                            Dictionary<int, IDestinationBlock> processBlocks, 
+                                                            IDestinationBlock nextDestination)
         {
             var destinationList = new List<List<Location>>();
 
@@ -97,13 +103,13 @@ namespace SimulationObjects
             var distinctDests = allObservations.Distinct();
             foreach(Location l in distinctDests)
             {
-                if (!processBlocks.ContainsKey(l))
+                if (!processBlocks.ContainsKey(l.LocationID))
                 {
-                    processBlocks.Add(l, new NonPutwallLane());
+                    processBlocks.Add(l.LocationID, new NonPutwallLane(Simulation, nextDestination));
                 }
             }
 
-            var probs = allObservations.GroupBy(x => x).Select(x => new Tuple<double, IProcessBlock>((double)x.Count() / obsCount, processBlocks[x.Key])).ToList();
+            var probs = allObservations.GroupBy(x => x.LocationID).Select(x => new Tuple<double, IDestinationBlock>((double)x.Count() / obsCount, processBlocks[x.Key])).ToList();
 
             if (probs.Select(x => x.Item1).Sum() < 0.99)
                 throw new InvalidOperationException();
@@ -126,18 +132,28 @@ namespace SimulationObjects
                 //Get the last batchscan at 901
                 var todaysArrivals = data.LastArrivals(scanner901, day);
 
+                //Get the time the first item in batch was put
+                var firstPutTimes = data.FirstPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList());
+
                 //Get the time the last item in the batch was put
-                var putTimes = data.LastPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList());
+                var lastPutTimes = data.LastPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList());
 
-                todaysArrivals = todaysArrivals.Where(y => putTimes.Select(x => x.Item1).Contains(y.BatchID)).ToList();
+                //FIX THIS GARBAGE WHEN YOU HAVE TIME
+                var validBatches = firstPutTimes.Select(x => x.Item1).Where(x => lastPutTimes.Select(y => y.Item1).Contains(x));
 
-                var timePairs = todaysArrivals.Select(x => new { arrivalTime = x.Timestamp, lastPutTime = putTimes.Where(y => y.Item1 == x.BatchID).First().Item2 });
+                var times = validBatches.Select(x => (int)lastPutTimes.Where(y => y.Item1 == x).FirstOrDefault().Item2.Subtract(firstPutTimes.Where(z => z.Item1 == x).FirstOrDefault().Item2).TotalSeconds).ToList();
 
-                var processTimes = timePairs.Select(x => (int)x.lastPutTime.Subtract(x.arrivalTime).TotalSeconds).ToList();
+                //todaysArrivals = todaysArrivals.Where(y => lastPutTimes.Select(x => x.Item1).Contains(y.BatchID)).ToList();
 
-                pTimeList.Add(processTimes);
+                //var timePairs = todaysArrivals.Select(x => new { arrivalTime = x.Timestamp, lastPutTime = lastPutTimes.Where(y => y.Item1 == x.BatchID).First().Item2 });
 
-                Logger.LogDistribution("ProcessTimeDist" + j, processTimes);
+                //var processTimes = timePairs.Select(x => (int)x.lastPutTime.Subtract(x.arrivalTime).TotalSeconds).ToList();
+
+                //pTimeList.Add(processTimes);
+                pTimeList.Add(times);
+
+                //Logger.LogDistribution("ProcessTimeDist" + j, processTimes);
+                Logger.LogDistribution("ProcessTimeDist" + j, times);
 
                 j++;
             }

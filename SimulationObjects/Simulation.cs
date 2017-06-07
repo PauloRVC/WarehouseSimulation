@@ -1,4 +1,7 @@
-﻿using System;
+﻿using SimulationObjects.Events;
+using SimulationObjects.Results;
+using SimulationObjects.SimBlocks;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,22 +13,24 @@ namespace SimulationObjects
     public class Simulation
     {
         private List<IEvent> EventQueue;
+
         private ArrivalBlock ArrivalBlock;
-        private List<IProcessBlock> PutwallLanes;
+
         private int EndTime;
+
         public int CurrentTime { get; private set; }
+        public ISimResults Results { get; private set; }
         public Simulation()
         {
             CurrentTime = 0;
+            Results = new SimulationResults();
         }
-        public void Initialize(ArrivalBlock arrivalBlock, List<IProcessBlock> putwallLanes, int endTime, Arrival firstArrival)
+        public void Initialize(ArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
         {
             ArrivalBlock = arrivalBlock;
-            PutwallLanes = putwallLanes;
             EndTime = endTime;
-
-            EventQueue = new List<IEvent>();
-            EventQueue.Add(firstArrival);
+            
+            EventQueue = new List<IEvent>() { firstArrival };
         }
         public SimulationResults Run()
         {
@@ -37,10 +42,12 @@ namespace SimulationObjects
                 var newEvent = EventQueue.First();
                 EventQueue.Remove(newEvent);
                 CurrentTime = newEvent.Time;
+                
+                var nextEvent = newEvent.Entity.Destination.GetNextEvent(newEvent.Entity);
 
-                var nextEvent = newEvent.Batch.Destination.GetNextEvent(newEvent.Batch);
                 if(nextEvent != null)
                     EventQueue.Add(nextEvent);
+
                 if (newEvent.IsArrival)
                 {
                     nextEvent = ArrivalBlock.GetNextEvent();
@@ -52,6 +59,7 @@ namespace SimulationObjects
                 EventQueue = EventQueue.OrderBy(x => x.Time).ToList();
                 iterCount++;
             }
+
             return results;
         }
     }

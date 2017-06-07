@@ -5,12 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Infrastructure.Models;
 using Infrastructure;
+using SimulationObjects.SimBlocks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Distributions
 {
     class FakeDataBuilder : IDistributionBuilder
     {
-        public List<Tuple<double, IProcessBlock>> FakeDestData { get; set; }
+        public List<Tuple<double, IDestinationBlock>> FakeDestData { get; set; }
 
         public ILogger Logger { get; set; } = new NullLogger();
 
@@ -27,7 +28,7 @@ namespace SimulationObjects
             return new EmpiricalDist(FakeIntData);
         }
         
-        public IDistribution<IProcessBlock> BuildDestinationDist(List<DateTime> selectedDays, Dictionary<Location, IProcessBlock> processBlocks)
+        public IDistribution<IDestinationBlock> BuildDestinationDist(List<DateTime> selectedDays, Dictionary<int, IDestinationBlock> processBlocks, IDestinationBlock nextDestination)
         {
             return new DestinationDist(FakeDestData);
         }

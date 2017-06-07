@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.SimBlocks
 {
-    public interface IProcessBlock
+    class MultiArrivalBlock
     {
-        IEvent GetNextEvent(Batch batch);
     }
 }

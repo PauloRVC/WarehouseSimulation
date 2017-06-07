@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SimulationObjects;
 using Infrastructure;
+using SimulationObjects.Utils;
+
 namespace WarehouseSimulation
 {
     /// <summary>
@@ -29,10 +31,19 @@ namespace WarehouseSimulation
 
             var availability = Data.GetOverallAvailability();
 
-            
-            var sim = SimulationFactory.DefaultSimulation(availability, 10000, 6);
+            var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
 
-            sim.Run();
+            for(int i = 1; i <= 10; i++)
+            {
+                var sim = SimulationFactory.DefaultSimulation(availability, 57600, 6, logger);
+
+                sim.Run();
+
+                logger.LogResults(sim.Results, "Results_" + i, 57600);
+            }
+
+            
+
         }
     }
 }

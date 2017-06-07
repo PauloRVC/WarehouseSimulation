@@ -1,14 +1,16 @@
-﻿using System;
+﻿using SimulationObjects.Entities;
+using SimulationObjects.Resources;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Events
 {
     public interface IEvent
     {
-        Batch Batch { get; }
+        IEntity Entity { get; }
         int Time { get; }
         bool IsArrival { get; }
         void Conclude();

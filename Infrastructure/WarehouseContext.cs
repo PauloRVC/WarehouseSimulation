@@ -77,6 +77,15 @@ namespace Infrastructure
             //Keep only the first arrival for each batch
             return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderByDescending(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).ToList();
         }
+        public List<Tuple<int, DateTime>> FirstPutTimes(DateTime day, List<int> batchIDs)
+        {
+            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID));
+
+
+            return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderBy(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+        }
         public  List<Tuple<int, DateTime>> LastPutTimes(DateTime day, List<int> batchIDs)
         {
             var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue 

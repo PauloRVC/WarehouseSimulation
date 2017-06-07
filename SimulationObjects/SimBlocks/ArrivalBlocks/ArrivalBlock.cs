@@ -1,30 +1,39 @@
-﻿using System;
+﻿using SimulationObjects.Distributions;
+using SimulationObjects.Events;
+using SimulationObjects.Entities;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.SimBlocks
 {
-    public class ArrivalBlock
+    public class ArrivalBlock: SimBlock
     {
         private IDistribution<int> ArrivalTimeDist;
-        private IDistribution<IProcessBlock> DestinationDist;
-        private Simulation Simulation;
-        public ArrivalBlock(IDistribution<int> arrivalTimeDist, IDistribution<IProcessBlock> destinationDist, Simulation simulation)
+        private IDistribution<IDestinationBlock> DestinationDist;
+        public ArrivalBlock(IDistribution<int> arrivalTimeDist, 
+                            IDistribution<IDestinationBlock> destinationDist, 
+                            Simulation simulation): base(BlockType.Arrival, simulation)
         {
             ArrivalTimeDist = arrivalTimeDist;
             DestinationDist = destinationDist;
-            Simulation = simulation;
         }
-        public Arrival GetNextEvent()
+        public IEvent GetNextEvent()
         {
             var Destination = DestinationDist.DrawNext();
             var Batch = new Batch(Destination);
+
             int dur = ArrivalTimeDist.DrawNext();
+
             Debug.Print(dur + "\n");
+
             var Time = Simulation.CurrentTime + dur;
+
+            Simulation.Results.ReportArrival(Batch, Time);
+
             return new Arrival(Batch, Time);
         }
     }

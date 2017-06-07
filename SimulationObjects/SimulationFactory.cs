@@ -1,5 +1,9 @@
 ﻿using Infrastructure;
 using Infrastructure.Models;
+using SimulationObjects.Distributions;
+using SimulationObjects.Resources;
+using SimulationObjects.SimBlocks;
+using SimulationObjects.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +19,10 @@ namespace SimulationObjects
     public static class SimulationFactory
     {
         
-        public static Simulation DefaultSimulation(List<DateTime> selectedDays, int endTime, int nProcessors)
+        public static Simulation DefaultSimulation(List<DateTime> selectedDays, int endTime, int nProcessors, ILogger logger)
         {
+            Simulation simulation = new Simulation();
+
             var Operators = new List<Processor>();
 
             var data = new WarehouseData();
@@ -26,39 +32,40 @@ namespace SimulationObjects
                 Operators.Add(new Processor());
             }
 
-            IDistributionBuilder distBuilder = new RealDistributionBuilder();
+            IDistributionBuilder distBuilder = new RealDistributionBuilder(simulation);
 
-            distBuilder.Logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            distBuilder.Logger = logger;
 
 
-            IProcessBlock disposalBlock = new DisposalBlock();
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
 
-            Simulation simulation = new Simulation();
 
-            IProcessBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
+            IDestinationBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
+            Location P06L = data.P06;
 
-            Dictionary<Location, IProcessBlock> locationDict = new Dictionary<Location, IProcessBlock>()
+            Dictionary<int, IDestinationBlock> locationDict = new Dictionary<int, IDestinationBlock>()
             {
-                { data.P06, P06 }
+                { P06L.LocationID, P06 }
             };
             
-            var ArrivalBlock = new ArrivalBlock(distBuilder.BuildArrivalDist(selectedDays), distBuilder.BuildDestinationDist(selectedDays, locationDict), simulation);
+            var ArrivalBlock = new ArrivalBlock(distBuilder.BuildArrivalDist(selectedDays), distBuilder.BuildDestinationDist(selectedDays, locationDict, disposalBlock), simulation);
 
             var firstArrival = ArrivalBlock.GetNextEvent();
 
-            simulation.Initialize(ArrivalBlock, locationDict.Values.ToList(), endTime, firstArrival);
+            simulation.Initialize(ArrivalBlock, endTime, firstArrival);
 
             return simulation;
         }
         public static Simulation FakeSimulation(List<DateTime> selectedDays)
         {
+            Simulation simulation = new Simulation();
+
             int endTime = 100000;
             IDistributionBuilder distBuilder = new FakeDataBuilder();
             FakeDataBuilder destDistBuilder = new FakeDataBuilder();
 
-            IProcessBlock disposalBlock = new DisposalBlock();
-
-            Simulation simulation = new Simulation();
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+            
 
             var Operators = new List<Processor>()
             {
@@ -72,28 +79,28 @@ namespace SimulationObjects
                 new Processor()
             };
 
-            IProcessBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
+            IDestinationBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
 
 
-            List<Tuple<double, IProcessBlock>> DestinationData = new List<Tuple<double, IProcessBlock>>()
+            List<Tuple<double, IDestinationBlock>> DestinationData = new List<Tuple<double, IDestinationBlock>>()
             {
-                new Tuple<double, IProcessBlock>(0.1, new NonPutwallLane()),
-                new Tuple<double, IProcessBlock>(0.1, new NonPutwallLane()),
-                new Tuple<double, IProcessBlock>(0.1, new NonPutwallLane()),
-                new Tuple<double, IProcessBlock>(0.1, new NonPutwallLane()),
-                new Tuple<double, IProcessBlock>(0.6, P06),
+                new Tuple<double, IDestinationBlock>(0.1, new NonPutwallLane(simulation, disposalBlock)),
+                new Tuple<double, IDestinationBlock>(0.1, new NonPutwallLane(simulation, disposalBlock)),
+                new Tuple<double, IDestinationBlock>(0.1, new NonPutwallLane(simulation, disposalBlock)),
+                new Tuple<double, IDestinationBlock>(0.1, new NonPutwallLane(simulation, disposalBlock)),
+                new Tuple<double, IDestinationBlock>(0.6, P06),
             };
 
             destDistBuilder.FakeDestData = DestinationData;
 
-            var ArrivalBlock = new ArrivalBlock(destDistBuilder.BuildArrivalDist(selectedDays), destDistBuilder.BuildDestinationDist(selectedDays, null), simulation);
+            var ArrivalBlock = new ArrivalBlock(destDistBuilder.BuildArrivalDist(selectedDays), destDistBuilder.BuildDestinationDist(selectedDays, null, disposalBlock), simulation);
 
-            List<IProcessBlock> putwallLanes = DestinationData.Select(x => x.Item2).ToList();
+            List<IDestinationBlock> putwallLanes = DestinationData.Select(x => x.Item2).ToList();
             putwallLanes.Add(P06);
 
             var firstArrival = ArrivalBlock.GetNextEvent();
 
-            simulation.Initialize(ArrivalBlock, putwallLanes, endTime, firstArrival);
+            simulation.Initialize(ArrivalBlock, endTime, firstArrival);
 
             return simulation;
         }

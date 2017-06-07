@@ -1,20 +1,21 @@
-﻿using System;
+﻿using SimulationObjects.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SimulationObjects
+namespace SimulationObjects.Events
 {
     public class Arrival : IEvent
 
     {
-        public Arrival(Batch batch, int time)
+        public Arrival(IEntity batch, int time)
         {
-            Batch = batch;
+            Entity = batch;
             Time = time;
         }
-        public Batch Batch
+        public IEntity Entity
         {
             get; private set;
         }
