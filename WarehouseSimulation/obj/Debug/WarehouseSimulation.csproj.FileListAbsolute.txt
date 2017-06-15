@@ -64,3 +64,35 @@ C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Ware
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.pdb
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.xml
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\WarehouseSimulation.exe.config
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.exe
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.pdb
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.dll.config
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\WarehouseSimulation.exe
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\WarehouseSimulation.pdb
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.Math.Core.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.Math.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.Statistics.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\SimulationObjects.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Infrastructure.pdb
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\SimulationObjects.pdb
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.Math.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.Math.Core.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\Accord.Statistics.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.csprojResolveAssemblyReference.cache
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\MainWindow.g.cs
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\App.g.cs
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation_Content.g.cs
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation_MarkupCompile.cache
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation_MarkupCompile.lref
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\MainWindow.baml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.g.resources
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.Properties.Resources.resources
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\obj\Debug\WarehouseSimulation.csproj.GenerateResource.Cache

@@ -23,7 +23,7 @@ namespace SimulationObjects
         public Simulation()
         {
             CurrentTime = 0;
-            Results = new SimulationResults();
+            //Results = new SimulationResults();
         }
         public void Initialize(ArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
         {
@@ -34,7 +34,7 @@ namespace SimulationObjects
         }
         public SimulationResults Run()
         {
-            var results = new SimulationResults();
+            var results = new SimulationResults(EndTime);
 
             int iterCount = 0;
             while (EventQueue[0].Time <= EndTime)

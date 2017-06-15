@@ -1,38 +1,36 @@
 ﻿using SimulationObjects.Distributions;
-using SimulationObjects.Entities;
-using SimulationObjects.Events;
 using SimulationObjects.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SimulationObjects.Entities;
+using SimulationObjects.Events;
 
 namespace SimulationObjects.SimBlocks
 {
-    public class Putwall : SimBlock, IDestinationBlock
+    public class PutwallWithOperatorSchedule : Putwall
     {
-        protected List<Processor> Operators;
-        protected IDistribution<int> ProcessTimeDist;
-        protected IDistribution<int> RecircTimeDist;
-        protected IDestinationBlock NextDestination;
+        private Dictionary<int, int> OperatorSchedule;
 
-        public Putwall(List<Processor> operators, 
-                       IDistribution<int> processTimeDist, 
-                       IDistribution<int> recircTimeDist, 
-                       Simulation simulation,
-                       IDestinationBlock nextDestination): base(BlockType.Process, simulation)
+        public PutwallWithOperatorSchedule(Dictionary<int, int> operatorSchedule,
+                      List<Processor> operators,
+                      IDistribution<int> processTimeDist,
+                      IDistribution<int> recircTimeDist,
+                      Simulation simulation,
+                      IDestinationBlock nextDestination): base(operators, processTimeDist, recircTimeDist, simulation, nextDestination)
         {
-            Operators = operators;
-            ProcessTimeDist = processTimeDist;
-            RecircTimeDist = recircTimeDist;
-            NextDestination = nextDestination;
+            OperatorSchedule = operatorSchedule;
         }
-        public virtual IEvent GetNextEvent(IEntity batch)
+
+        public override IEvent GetNextEvent(IEntity batch)
         {
             IEvent NextEvent;
             int Time;
-            if (Operators.All(x => x.IsBusy))
+            int scheduleIndex = OperatorSchedule.Keys.Where(x => x <= Simulation.CurrentTime).Max();
+
+            if (Operators.All(x => x.IsBusy) | Operators.Where(x => x.IsBusy).Count() >= OperatorSchedule[scheduleIndex])
             {
                 // Recirculate
                 Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
@@ -54,7 +52,6 @@ namespace SimulationObjects.SimBlocks
             }
 
             return NextEvent;
-            
         }
     }
 }

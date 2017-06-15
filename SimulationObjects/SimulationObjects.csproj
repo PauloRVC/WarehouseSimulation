@@ -95,6 +95,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\Putwall.cs" />
     <Compile Include="Distributions\RealDistributionBuilder.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithOperatorSchedule.cs" />
     <Compile Include="SimBlocks\SimBlock.cs" />
     <Compile Include="Simulation.cs" />
     <Compile Include="SimulationFactory.cs" />

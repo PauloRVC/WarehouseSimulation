@@ -141,7 +141,9 @@ namespace SimulationObjects.Distributions
                 //FIX THIS GARBAGE WHEN YOU HAVE TIME
                 var validBatches = firstPutTimes.Select(x => x.Item1).Where(x => lastPutTimes.Select(y => y.Item1).Contains(x));
 
-                var times = validBatches.Select(x => (int)lastPutTimes.Where(y => y.Item1 == x).FirstOrDefault().Item2.Subtract(firstPutTimes.Where(z => z.Item1 == x).FirstOrDefault().Item2).TotalSeconds).ToList();
+                var times = validBatches.Select(x => (int)lastPutTimes.Where(y => y.Item1 == x).
+                                                    FirstOrDefault().Item2.Subtract(firstPutTimes.Where(z => z.Item1 == x).
+                                                    FirstOrDefault().Item2).TotalSeconds).ToList();
 
                 //todaysArrivals = todaysArrivals.Where(y => lastPutTimes.Select(x => x.Item1).Contains(y.BatchID)).ToList();
 

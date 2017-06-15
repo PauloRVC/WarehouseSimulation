@@ -28,6 +28,13 @@ namespace SimulationObjects.Results
 
         private Dictionary<SimBlock, List<int>> ProcessTimes = new Dictionary<SimBlock, List<int>>();
 
+        private int EndTime;
+
+        public SimulationResults(int endTime)
+        {
+            EndTime = endTime;
+        }
+
         public void ReportArrival(IEntity entity, int arrivalTime)
         {
             if (ArrivalTimes.ContainsKey(entity))
@@ -50,6 +57,8 @@ namespace SimulationObjects.Results
                                              IEnumerable<IResource> consumedResources,
                                              SimBlock process)
         {
+            endTime = Math.Min(endTime, EndTime);
+
             foreach(IResource r in consumedResources)
             {
                 if (ConsumedTime.ContainsKey(r))
@@ -83,6 +92,8 @@ namespace SimulationObjects.Results
 
         public void ReportRecirculation(IEntity entity, int startTime, int endTime)
         {
+            endTime = Math.Min(endTime, EndTime);
+
             if (TimeInRecirculation.ContainsKey(entity))
             {
                 TimeInRecirculation[entity] += endTime - startTime;
@@ -94,6 +105,7 @@ namespace SimulationObjects.Results
                 TimesRecirculated.Add(entity, 1);
             }
         }
+
 
         public Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInSystemStats()
         {

@@ -47,3 +47,6 @@ C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Simu
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.dll
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\Infrastructure.pdb
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\SimulationObjects\bin\Debug\EntityFramework.xml
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.csprojResolveAssemblyReference.cache
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.dll
+C:\Users\DUlch\Documents\GitHub\WarehouseSimulation\SimulationObjects\obj\Debug\SimulationObjects.pdb
