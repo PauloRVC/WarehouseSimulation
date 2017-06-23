@@ -19,11 +19,11 @@ namespace SimulationObjects
         private int EndTime;
 
         public int CurrentTime { get; private set; }
-        public ISimResults Results { get; private set; }
+        public SimulationResults Results { get; private set; }
         public Simulation()
         {
             CurrentTime = 0;
-            //Results = new SimulationResults();
+            Results = new SimulationResults();
         }
         public void Initialize(ArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
         {
@@ -34,7 +34,7 @@ namespace SimulationObjects
         }
         public SimulationResults Run()
         {
-            var results = new SimulationResults(EndTime);
+            Results.EndTime = EndTime;
 
             int iterCount = 0;
             while (EventQueue[0].Time <= EndTime)
@@ -60,7 +60,7 @@ namespace SimulationObjects
                 iterCount++;
             }
 
-            return results;
+            return Results;
         }
     }
 }

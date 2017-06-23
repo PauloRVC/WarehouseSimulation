@@ -28,13 +28,9 @@ namespace SimulationObjects.Results
 
         private Dictionary<SimBlock, List<int>> ProcessTimes = new Dictionary<SimBlock, List<int>>();
 
-        private int EndTime;
+        public int EndTime { get; set; }
 
-        public SimulationResults(int endTime)
-        {
-            EndTime = endTime;
-        }
-
+       
         public void ReportArrival(IEntity entity, int arrivalTime)
         {
             if (ArrivalTimes.ContainsKey(entity))

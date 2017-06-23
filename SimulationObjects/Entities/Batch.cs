@@ -14,7 +14,7 @@ namespace SimulationObjects.Entities
         public Batch(IDestinationBlock destination)
         {
             Destination = destination;
-            if (Destination.GetType() == typeof(Putwall))
+            if (Destination.GetType() == typeof(Putwall) | Destination.GetType().IsSubclassOf(typeof(Putwall))) 
             {
                 ProcessType = ProcessType.Putwall;
             }

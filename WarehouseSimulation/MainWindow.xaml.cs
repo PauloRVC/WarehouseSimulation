@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using SimulationObjects;
 using Infrastructure;
 using SimulationObjects.Utils;
+using SimulationObjects.Entities;
 
 namespace WarehouseSimulation
 {
@@ -63,15 +64,30 @@ namespace WarehouseSimulation
             {61200,7}
 
             };
-            var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //         var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
 
             for (int i = 1; i <= 20; i++)
             {
-                var sim = SimulationFactory.DefaultSimulation(availability, 57600, 6, logger);
+                var sim = SimulationFactory.SimWithOperatorSchedule(availability, 57600, operatorSchedule, logger);
 
                 sim.Run();
 
                 logger.LogResults(sim.Results, "Results_" + i, 57600);
+
+                var t = sim.Results.CalcThroughput();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+            }
+
+            using(var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            {
+                foreach(Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
             }
         }
         private void RunDefaultSim()

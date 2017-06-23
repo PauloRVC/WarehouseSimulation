@@ -58,7 +58,7 @@ namespace SimulationObjects.Distributions
                 j++;
             }
 
-            var allObservations = interArrivalList.SelectMany(x => x);
+            var allObservations = interArrivalList.SelectMany(x => x).Where(x => x < 70);
 
             if(allObservations.Any(x => x < 0))
                 throw new InvalidOperationException();

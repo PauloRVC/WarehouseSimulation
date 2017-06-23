@@ -11,6 +11,8 @@ namespace SimulationObjects.Results
 {
     public interface ISimResults
     {
+        int EndTime { get; set; }
+        
         void ReportArrival(IEntity entity, int arrivalTime);
         void ReportDisposal(IEntity entity, int disposalTime);
         void ReportProcessRealization(IEntity entity, int startTime, int endTime, IEnumerable<IResource> consumedResources, SimBlock process);
