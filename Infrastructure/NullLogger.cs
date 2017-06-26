@@ -23,5 +23,10 @@ namespace Infrastructure
         {
             //Do Nothing
         }
+
+        public void LogPutsPerHour(string name, Dictionary<int, int> pph)
+        {
+            //Do Nothing
+        }
     }
 }

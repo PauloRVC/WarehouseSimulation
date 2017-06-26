@@ -107,5 +107,47 @@ namespace Infrastructure
         {
             return GetBatchScanAvailability().Intersect(GetPutTimeAvailability()).ToList();
         }
+        public Dictionary<int, int> GetPutsPerHour(DateTime day)
+        {
+            var lastPuts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                               && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date).
+                                                GroupBy(x => x.Order.BatchID).Select(x => x.OrderByDescending(y => y.PutTimestamp).FirstOrDefault()).
+                                                GroupBy(x => x.PutTimestamp.Value.Hour).
+                                                Select(x => new { hour = x.Key, count = x.Count() });
+            var pph = new Dictionary<int, int>();
+
+            foreach(var a in lastPuts)
+            {
+                pph.Add(a.hour, a.count);
+            }
+
+            for(int i = 0; i < 24; i++)
+            {
+                if (!pph.ContainsKey(i))
+                {
+                    pph.Add(i, 0);
+                }
+            }
+            return pph;
+        }
+        public List<int> GetRecircTimes(DateTime day)
+        {
+            var res = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+                                               DbFunctions.TruncateTime(x.Timestamp) == day.Date).
+                                               GroupBy(x => x.BatchID).Where(x => x.Count() > 1).
+                                               Select(x => x.Select(y => y.Timestamp).OrderBy(y => y).ToList());
+
+            List<int> recircTimes = new List<int>();
+
+            foreach(var group in res)
+            {
+                for(int i = 1; i < group.Count; i++)
+                {
+                    recircTimes.Add((int)group[i].Subtract(group[i-1]).TotalSeconds);
+                }
+            }
+
+            return recircTimes;
+        }
     }
 }

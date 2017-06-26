@@ -17,6 +17,7 @@ namespace SimulationObjects.Results
         void ReportDisposal(IEntity entity, int disposalTime);
         void ReportProcessRealization(IEntity entity, int startTime, int endTime, IEnumerable<IResource> consumedResources, SimBlock process);
         void ReportRecirculation(IEntity entity, int startTime, int endTime);
+        void ReportQueueTime(IEntity entity, int startTime, int endTime);
 
         Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInSystemStats();
         Dictionary<IResource, int> CalcTimeConsumed();
@@ -25,5 +26,6 @@ namespace SimulationObjects.Results
         Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInProcessStats();
         Dictionary<ProcessType, Tuple<double, double>> CalcRecirculationTimeStats();
         Dictionary<ProcessType, Tuple<double, double>> CalcTimesRecirculatedStats();
+        Dictionary<ProcessType, Tuple<double, double>> CalcQueueTimes();
     }
 }

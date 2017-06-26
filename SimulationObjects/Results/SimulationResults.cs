@@ -23,6 +23,7 @@ namespace SimulationObjects.Results
         private Dictionary<IEntity, int> TimeInProcess = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimeInRecirculation = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimesRecirculated = new Dictionary<IEntity, int>();
+        private Dictionary<IEntity, int> TimeInQueue = new Dictionary<IEntity, int>();
 
         private Dictionary<IResource, int> ConsumedTime = new Dictionary<IResource, int>();
 
@@ -55,7 +56,20 @@ namespace SimulationObjects.Results
         {
             endTime = Math.Min(endTime, EndTime);
 
-            foreach(IResource r in consumedResources)
+            if (!TimesRecirculated.ContainsKey(entity))
+            {
+                TimesRecirculated.Add(entity, 0);
+            }
+            if (!TimeInRecirculation.ContainsKey(entity))
+            {
+                TimeInRecirculation.Add(entity, 0);
+            }
+            if (!TimeInQueue.ContainsKey(entity))
+            {
+                TimeInQueue.Add(entity, 0);
+            }
+
+            foreach (IResource r in consumedResources)
             {
                 if (ConsumedTime.ContainsKey(r))
                 {
@@ -99,6 +113,19 @@ namespace SimulationObjects.Results
             {
                 TimeInRecirculation.Add(entity, endTime - startTime);
                 TimesRecirculated.Add(entity, 1);
+            }
+        }
+        public void ReportQueueTime(IEntity entity, int startTime, int endTime)
+        {
+            endTime = Math.Min(endTime, EndTime);
+
+            if (TimeInQueue.ContainsKey(entity))
+            {
+                TimeInQueue[entity] += endTime - startTime;
+            }
+            else
+            {
+                TimeInQueue.Add(entity, endTime - startTime);
             }
         }
 
@@ -190,6 +217,20 @@ namespace SimulationObjects.Results
                     TimesRecirculated.Where(x => x.Key.ProcessType == p).Select(x => x.Value).Average(),
                     TimesRecirculated.Where(x => x.Key.ProcessType == p).Select(x => x.Value).StandardDeviation()));
             }
+            return results;
+        }
+
+        public Dictionary<ProcessType, Tuple<double, double>> CalcQueueTimes()
+        {
+            var results = new Dictionary<ProcessType, Tuple<double, double>>();
+
+            foreach (ProcessType p in TimeInQueue.Keys.Select(x => x.ProcessType).Distinct())
+            {
+                results.Add(p, new Tuple<double, double>(
+                    TimeInQueue.Where(x => x.Key.ProcessType == p).Select(x => x.Value).Average(),
+                    TimeInQueue.Where(x => x.Key.ProcessType == p).Select(x => x.Value).StandardDeviation()));
+            }
+
             return results;
         }
     }

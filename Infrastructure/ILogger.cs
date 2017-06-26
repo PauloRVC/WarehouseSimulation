@@ -12,5 +12,6 @@ namespace Infrastructure
         void LogDistribution(string name, List<int> observations);
         void LogDistribution(string name, List<Location> observations);
         void LogBatches(string name, List<Tuple<string, DateTime>> results);
-    }
+        void LogPutsPerHour(string name, Dictionary<int, int> pph);
+    } 
 }

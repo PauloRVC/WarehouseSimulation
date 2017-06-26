@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="Entities\IEntity.cs" />
     <Compile Include="Events\Arrival.cs" />
+    <Compile Include="Events\EndQueueEvent.cs" />
     <Compile Include="Events\RecirculateEvent.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Resources\IResource.cs" />
@@ -96,6 +97,7 @@
     <Compile Include="SimBlocks\ProcessBlocks\Putwall.cs" />
     <Compile Include="Distributions\RealDistributionBuilder.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithOperatorSchedule.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHSchedule.cs" />
     <Compile Include="SimBlocks\SimBlock.cs" />
     <Compile Include="Simulation.cs" />
     <Compile Include="SimulationFactory.cs" />

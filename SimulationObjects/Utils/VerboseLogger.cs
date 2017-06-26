@@ -80,6 +80,26 @@ namespace SimulationObjects.Utils
                 }
             }
         }
+
+        public void LogPutsPerHour(string name, Dictionary<int, int> pph)
+        {
+            name += ".txt";
+
+            while (System.IO.File.Exists(FolderPath + @"\" + name))
+            {
+                name = name.Substring(0, name.Length - 4);
+                name += "1.txt";
+            }
+
+            using (var writer = new System.IO.StreamWriter(FolderPath + @"\" + name))
+            {
+                foreach(var p in pph)
+                {
+                    writer.WriteLine(p.Key.ToString() + "\t" + p.Value.ToString());
+                }
+            }
+        }
+
         public void LogResults(ISimResults results, string name, int totalTIme)
         {
             name += ".txt";
@@ -145,6 +165,14 @@ namespace SimulationObjects.Utils
                     writer.WriteLine("Entity Times Recirculated for " + p.ToString() + Environment.NewLine +
                                  "Avg: " + entityTimesRecirculated[p].Item1 + Environment.NewLine +
                                  "StdDev: " + entityTimesRecirculated[p].Item2 + Environment.NewLine + Environment.NewLine);
+                }
+
+                var timeInQ = results.CalcQueueTimes();
+                foreach (ProcessType p in timeInQ.Keys)
+                {
+                    writer.WriteLine("Entity Time in Queue for " + p.ToString() + Environment.NewLine +
+                                 "Avg: " + timeInQ[p].Item1 + Environment.NewLine +
+                                 "StdDev: " + timeInQ[p].Item2 + Environment.NewLine + Environment.NewLine);
                 }
 
             }

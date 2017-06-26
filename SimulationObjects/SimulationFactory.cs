@@ -18,6 +18,63 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static Simulation SimWithPPHSchedule(List<DateTime> selectedDays, 
+                                                    int startHour,
+                                                    int endTime, 
+                                                    int queueSize,
+                                                    ILogger logger)
+        {
+            Simulation simulation = new Simulation();
+
+            
+
+            var Operators = new List<Processor>();
+
+            var data = new WarehouseData();
+            
+            Operators.Add(new Processor());
+
+            RealDistributionBuilder distBuilder = new RealDistributionBuilder(simulation);
+
+            distBuilder.Logger = logger;
+
+            var pphHourly = distBuilder.GetPutsPerHour(selectedDays.First());
+
+            var pphSchedule = new Dictionary<int, int>();
+
+            for(int hour=startHour;hour<startHour + 24; hour++)
+            {
+                int startSecond = (hour - startHour) * 3600;
+                pphSchedule.Add(startSecond, pphHourly[hour % 24]);
+            }
+
+            logger.LogPutsPerHour("PPH_Schedule", pphSchedule);
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+
+            IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
+                                                               pphSchedule,
+                                                               Operators,
+                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildRecircTimeDist(selectedDays, 300),
+                                                               simulation,
+                                                                disposalBlock);
+            Location P06L = data.P06;
+
+            Dictionary<int, IDestinationBlock> locationDict = new Dictionary<int, IDestinationBlock>()
+            {
+                { P06L.LocationID, P06 }
+            };
+
+            var ArrivalBlock = new ArrivalBlock(distBuilder.BuildArrivalDist(selectedDays, 300), distBuilder.BuildDestinationDist(selectedDays, locationDict, disposalBlock), simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, endTime, firstArrival);
+
+            return simulation;
+        }
         public static Simulation SimWithOperatorSchedule(List<DateTime> selectedDays, int endTime, Dictionary<int, int> operatorSchedule, ILogger logger)
         {
             Simulation simulation = new Simulation();

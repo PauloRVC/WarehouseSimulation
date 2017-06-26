@@ -30,8 +30,45 @@ namespace WarehouseSimulation
 
             //RunDefaultSim();
 
-            RunNov10Sim();
+            RunPPHSim();
             
+        }
+        private void RunPPHSim()
+        {
+            var Data = new WarehouseData();
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,10)
+            };
+
+            
+            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var sim = SimulationFactory.SimWithPPHSchedule(availability, 6, 57600, 20, logger);
+
+                sim.Run();
+
+                logger.LogResults(sim.Results, "Results_" + i, 57600);
+
+                var t = sim.Results.CalcThroughput();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+            }
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+            }
         }
         private void RunNov10Sim()
         {
@@ -64,8 +101,8 @@ namespace WarehouseSimulation
             {61200,7}
 
             };
-            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
-            //         var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+                    var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
 
@@ -82,9 +119,10 @@ namespace WarehouseSimulation
                 throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
             }
 
-            using(var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
             {
-                foreach(Tuple<int, int> t2 in throughput)
+                foreach (Tuple<int, int> t2 in throughput)
                 {
                     writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
                 }
