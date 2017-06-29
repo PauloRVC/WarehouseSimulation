@@ -128,10 +128,16 @@ namespace SimulationObjects.Utils
                     writer.WriteLine("Utilization: " + (double)stats/totalTIme + Environment.NewLine + Environment.NewLine);
                 }
 
-                var throughput = results.CalcThroughput();
+                var throughput = results.CalcNumOut();
                 foreach (ProcessType p in throughput.Keys)
                 {
-                    writer.WriteLine("Throughput " + p.ToString() + Environment.NewLine + throughput[p] + Environment.NewLine + Environment.NewLine);
+                    writer.WriteLine("Entities Disposed " + p.ToString() + Environment.NewLine + throughput[p] + Environment.NewLine + Environment.NewLine);
+                }
+
+                var input = results.CalcNumIn();
+                foreach (ProcessType p in input.Keys)
+                {
+                    writer.WriteLine("Entities Created " + p.ToString() + Environment.NewLine + input[p] + Environment.NewLine + Environment.NewLine);
                 }
 
                 var processTimeStats = results.CalcProcessTimeStats();
@@ -177,6 +183,38 @@ namespace SimulationObjects.Utils
 
             }
 
+        }
+        public void LogDBStats(string name, DateTime day)
+        {
+            name += ".txt";
+
+            while (System.IO.File.Exists(FolderPath + @"\" + name))
+            {
+                name = name.Substring(0, name.Length - 4);
+                name += "1.txt";
+            }
+
+            using (var writer = new System.IO.StreamWriter(FolderPath + @"\" + name))
+            {
+                var dbStats = new SystemStats(day);
+
+                writer.WriteLine("Statistic \t Putwall \t NonPutwall");
+
+                writer.WriteLine("Count In \t" + dbStats.ArrivalCount[ProcessType.Putwall] + "\t" + dbStats.ArrivalCount[ProcessType.NonPutwall]);
+
+                writer.WriteLine("Count Out \t" + dbStats.ExitCount + "\t N/A");
+
+                writer.WriteLine("Avg Time In Sys \t" + dbStats.AvgTimeInSystem + "\t N/A");
+
+                writer.WriteLine("Avg Time In Q \t" + dbStats.AvgTimeInQueue + "\t N/A");
+
+                writer.WriteLine("Avg Time in Recirc \t" + dbStats.AvgTimeRecirc[ProcessType.Putwall] + "\t" + dbStats.AvgTimeRecirc[ProcessType.NonPutwall]);
+
+                writer.WriteLine("Avg Num Recirc \t" + dbStats.AvgNumTimesRecirc[ProcessType.Putwall] + "\t" + dbStats.AvgNumTimesRecirc[ProcessType.NonPutwall]);
+
+                writer.WriteLine("Avg Time in Process \t" + dbStats.AvgTimeInProcess + "\t N/A");
+                
+            }
         }
     }
 }

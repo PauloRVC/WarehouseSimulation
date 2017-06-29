@@ -43,26 +43,31 @@ namespace WarehouseSimulation
             };
 
             
-            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
-            var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+
+            //logger.LogDBStats("DBStats", availability.First());
+            //logger.LogDBStats("DBStats2", new DateTime(2015, 11, 11));
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
 
             for (int i = 1; i <= 20; i++)
             {
-                var sim = SimulationFactory.SimWithPPHSchedule(availability, 6, 57600, 20, logger);
+                var sim = SimulationFactory.SimWithPPHSchedule(availability, 6, 57600, 100, logger);
 
                 sim.Run();
 
                 logger.LogResults(sim.Results, "Results_" + i, 57600);
 
-                var t = sim.Results.CalcThroughput();
+                var t = sim.Results.CalcNumOut();
 
                 throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
             }
 
-            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
-            using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            
+
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
             {
                 foreach (Tuple<int, int> t2 in throughput)
                 {
@@ -101,8 +106,8 @@ namespace WarehouseSimulation
             {61200,7}
 
             };
-            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
-                    var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //        var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
 
@@ -114,13 +119,13 @@ namespace WarehouseSimulation
 
                 logger.LogResults(sim.Results, "Results_" + i, 57600);
 
-                var t = sim.Results.CalcThroughput();
+                var t = sim.Results.CalcNumOut();
 
                 throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
             }
 
-            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
-            using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
             {
                 foreach (Tuple<int, int> t2 in throughput)
                 {

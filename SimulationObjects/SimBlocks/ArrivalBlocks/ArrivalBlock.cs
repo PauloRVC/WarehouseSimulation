@@ -32,8 +32,11 @@ namespace SimulationObjects.SimBlocks
 
             var Time = Simulation.CurrentTime + dur;
 
-            Simulation.Results.ReportArrival(Batch, Time);
-
+            if(Time <= Simulation.EndTime)
+            {
+                Simulation.Results.ReportArrival(Batch, Time);
+            }
+            
             return new Arrival(Batch, Time);
         }
     }

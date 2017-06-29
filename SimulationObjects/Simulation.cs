@@ -16,7 +16,7 @@ namespace SimulationObjects
 
         private ArrivalBlock ArrivalBlock;
 
-        private int EndTime;
+        public int EndTime { get; private set; }
 
         public int CurrentTime { get; private set; }
         public SimulationResults Results { get; private set; }

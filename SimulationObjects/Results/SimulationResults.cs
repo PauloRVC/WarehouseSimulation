@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SimulationObjects.Entities;
 using SimulationObjects.Resources;
 using SimulationObjects.SimBlocks;
+using Infrastructure;
 
 namespace SimulationObjects.Results
 {
@@ -30,14 +31,18 @@ namespace SimulationObjects.Results
         private Dictionary<SimBlock, List<int>> ProcessTimes = new Dictionary<SimBlock, List<int>>();
 
         public int EndTime { get; set; }
-
-       
+        
         public void ReportArrival(IEntity entity, int arrivalTime)
         {
             if (ArrivalTimes.ContainsKey(entity))
                 throw new InvalidOperationException();
 
             ArrivalTimes.Add(entity, arrivalTime);
+
+            TimesRecirculated.Add(entity, 0);
+            TimeInRecirculation.Add(entity, 0);
+            TimeInQueue.Add(entity, 0);
+            TimeInProcess.Add(entity, 0);
         }
 
         public void ReportDisposal(IEntity entity, int disposalTime)
@@ -55,20 +60,7 @@ namespace SimulationObjects.Results
                                              SimBlock process)
         {
             endTime = Math.Min(endTime, EndTime);
-
-            if (!TimesRecirculated.ContainsKey(entity))
-            {
-                TimesRecirculated.Add(entity, 0);
-            }
-            if (!TimeInRecirculation.ContainsKey(entity))
-            {
-                TimeInRecirculation.Add(entity, 0);
-            }
-            if (!TimeInQueue.ContainsKey(entity))
-            {
-                TimeInQueue.Add(entity, 0);
-            }
-
+            
             foreach (IResource r in consumedResources)
             {
                 if (ConsumedTime.ContainsKey(r))
@@ -134,16 +126,21 @@ namespace SimulationObjects.Results
         {
             var results = new Dictionary<ProcessType, Tuple<double, double>>();
 
-            foreach(ProcessType p in DisposalTimes.Keys.Select(x => x.ProcessType).Distinct())
+            foreach(ProcessType p in ArrivalTimes.Keys.Select(x => x.ProcessType).Distinct())
             {
                 List<double> timeInSystem = new List<double>();
 
-                foreach (IEntity e in DisposalTimes.Keys.Where(x => x.ProcessType == p))
+                foreach (IEntity e in ArrivalTimes.Keys.Where(x => x.ProcessType == p))
                 {
-                    if (!ArrivalTimes.ContainsKey(e))
-                        throw new Exception();
+                    if (!DisposalTimes.ContainsKey(e))
+                    {
+                        timeInSystem.Add(EndTime - ArrivalTimes[e]);
+                    }else
+                    {
+                        timeInSystem.Add(DisposalTimes[e] - ArrivalTimes[e]);
+                    }
 
-                    timeInSystem.Add(DisposalTimes[e] - ArrivalTimes[e]);
+                    
                 }
 
                 results.Add(p, new Tuple<double, double>(timeInSystem.Average(), timeInSystem.StandardDeviation()));
@@ -162,12 +159,22 @@ namespace SimulationObjects.Results
 
             return results;
         }
-        public Dictionary<ProcessType, int> CalcThroughput()
+        public Dictionary<ProcessType, int> CalcNumOut()
         {
             var results = new Dictionary<ProcessType, int>();
             foreach (ProcessType p in DisposalTimes.Keys.Select(x => x.ProcessType).Distinct())
             {
                 results.Add(p, DisposalTimes.Keys.Where(x => x.ProcessType == p).Count());
+            }
+
+            return results;
+        }
+        public Dictionary<ProcessType, int> CalcNumIn()
+        {
+            var results = new Dictionary<ProcessType, int>();
+            foreach (ProcessType p in ArrivalTimes.Keys.Select(x => x.ProcessType).Distinct())
+            {
+                results.Add(p, ArrivalTimes.Keys.Where(x => x.ProcessType == p).Count());
             }
 
             return results;
@@ -233,5 +240,7 @@ namespace SimulationObjects.Results
 
             return results;
         }
+
+        
     }
 }

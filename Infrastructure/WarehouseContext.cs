@@ -95,6 +95,12 @@ namespace Infrastructure
 
             return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
         }
+        public int GetNPuts(DateTime day)
+        {
+            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date);
+            return puts.GroupBy(x => x.Order.BatchID).Count();
+        }
         public  List<DateTime> GetBatchScanAvailability()
         {
             return db.BatchScans.Select(x => DbFunctions.TruncateTime(x.Timestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
@@ -149,5 +155,22 @@ namespace Infrastructure
 
             return recircTimes;
         }
+        public List<Tuple<int, List<Tuple<int,DateTime>>>>GetRecircGroups(DateTime day)
+        {
+            var dbresults = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+                                               DbFunctions.TruncateTime(x.Timestamp) == day.Date).
+                                               GroupBy(x => x.BatchID).
+                                               Select(x => new
+                                               {
+                                                   bid = x.Key,
+                                                   pair = x.Select(y => new { y.IntendedDestinationID, y.Timestamp}).ToList()
+                                               }).ToList();
+
+            return dbresults.
+                Select(x => new Tuple<int, List<Tuple<int, DateTime>>>(x.bid, x.pair.Select(y => new Tuple<int, DateTime>(y.IntendedDestinationID, y.Timestamp)).
+                ToList())).ToList();
+        }
+
+        
     }
 }

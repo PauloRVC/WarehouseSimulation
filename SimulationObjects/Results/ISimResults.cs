@@ -1,4 +1,5 @@
-﻿using SimulationObjects.Entities;
+﻿using Infrastructure;
+using SimulationObjects.Entities;
 using SimulationObjects.Resources;
 using SimulationObjects.SimBlocks;
 using System;
@@ -21,7 +22,8 @@ namespace SimulationObjects.Results
 
         Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInSystemStats();
         Dictionary<IResource, int> CalcTimeConsumed();
-        Dictionary<ProcessType, int> CalcThroughput();
+        Dictionary<ProcessType, int> CalcNumOut();
+        Dictionary<ProcessType, int> CalcNumIn();
         Dictionary<SimBlock, Tuple<double, double>> CalcProcessTimeStats();
         Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInProcessStats();
         Dictionary<ProcessType, Tuple<double, double>> CalcRecirculationTimeStats();
