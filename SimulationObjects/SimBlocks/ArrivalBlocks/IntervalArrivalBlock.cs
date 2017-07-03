@@ -3,22 +3,22 @@ using SimulationObjects.Events;
 using SimulationObjects.Entities;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SimulationObjects.SimBlocks
 {
-    public class ArrivalBlock: SimBlock, IArrivalBlock
+    public class IntervalArrivalBlock : SimBlock, IArrivalBlock
     {
-        private IDistribution<int> ArrivalTimeDist;
         private IDistribution<IDestinationBlock> DestinationDist;
-        public ArrivalBlock(IDistribution<int> arrivalTimeDist, 
-                            IDistribution<IDestinationBlock> destinationDist, 
-                            Simulation simulation): base(BlockType.Arrival, simulation)
+
+        private Dictionary<int, IDistribution<int>> InterArrivalDists;
+        public IntervalArrivalBlock(Dictionary<int, IDistribution<int>> interArrivalDists,
+                                    IDistribution<IDestinationBlock> destinationDist,
+                                    Simulation simulation) : base(BlockType.Arrival, simulation)
         {
-            ArrivalTimeDist = arrivalTimeDist;
+            InterArrivalDists = interArrivalDists;
             DestinationDist = destinationDist;
         }
         public IEvent GetNextEvent()
@@ -26,15 +26,17 @@ namespace SimulationObjects.SimBlocks
             var Destination = DestinationDist.DrawNext();
             var Batch = new Batch(Destination);
 
-            int dur = ArrivalTimeDist.DrawNext();
-            
+            var interArrivalDist = InterArrivalDists[InterArrivalDists.Keys.Where(x => x <= Simulation.CurrentTime).Max()];
+
+            int dur = interArrivalDist.DrawNext();
+
             var Time = Simulation.CurrentTime + dur;
 
-            if(Time <= Simulation.EndTime)
+            if (Time <= Simulation.EndTime)
             {
                 Simulation.Results.ReportArrival(Batch, Time);
             }
-            
+
             return new Arrival(Batch, Time);
         }
     }

@@ -346,5 +346,71 @@ namespace SimulationObjects.Distributions
             
             return pph;
         }
+        public Dictionary<int, int> GetPutsPerX(DateTime day, int x)
+        {
+            var ppx = data.GetPutsPerZMins(day, x);
+
+            logger.LogPutsPerHour("PutsPerX", ppx);
+
+            return ppx;
+        }
+        public Dictionary<int, IDistribution<int>> BuildIntervalDists(Dictionary<DateTime, int> breakpoints, List<DateTime> selectedDays, int anomolyLimit)
+        {
+            Dictionary<int, IDistribution<int>> intervalDists = new Dictionary<int, IDistribution<int>>();
+
+            var interArrivalList = new Dictionary<int,List<int>>();
+
+            var scanner901 = data.Scanner901;
+
+            foreach(int i in breakpoints.Values)
+            {
+                interArrivalList.Add(i, new List<int>());
+            }
+
+            //For each day, find the ordered list of the time first arrival of each batch at scanner 901
+            int j = 1;
+            foreach (DateTime day in selectedDays)
+            {
+                var todaysArrivals = data.FirstArrivals(scanner901, day).Select(x => x.Timestamp).OrderBy(x => x).ToList();
+                
+                foreach(KeyValuePair<DateTime, int> p in breakpoints)
+                {
+                    var intervalArrivals = todaysArrivals.Where(x => x.TimeOfDay <= p.Key.TimeOfDay).OrderBy(x => x).ToList();
+                    var intervalArrivalTimes = new List<int>();
+                    
+                    for(int i=1; i < intervalArrivals.Count; i++)
+                    {
+                        intervalArrivalTimes.Add((int)intervalArrivals[i].Subtract(intervalArrivals[i - 1]).TotalSeconds);
+                    }
+
+                    intervalArrivalTimes = intervalArrivalTimes.Where(x => x < anomolyLimit).ToList();
+
+                    interArrivalList[p.Value].AddRange(intervalArrivalTimes);
+
+                    Logger.LogDistribution("ArrivalDistDay" + j + "_" + p.Value, intervalArrivalTimes);
+                }
+
+                j++;
+            }
+
+            foreach(int i in breakpoints.Values)
+            {
+                if (interArrivalList[i].Any(x => x < 0))
+                    throw new InvalidOperationException();
+
+                int obsCount = interArrivalList[i].Count();
+
+                var probs = interArrivalList[i].GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / obsCount, x.Key)).ToList();
+
+                if (probs.Select(x => x.Item1).Sum() < 0.99)
+                    throw new InvalidOperationException();
+
+                var arrivalDist = new EmpiricalDist(probs);
+
+                intervalDists.Add(i, arrivalDist);
+            }
+            
+            return intervalDists;
+        }
     }
 }

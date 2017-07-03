@@ -18,6 +18,130 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static Simulation SimWithPPXScheduleAndInterval(List<DateTime> selectedDays,
+                                                    int x,
+                                                    int startMin,
+                                                    int endTime,
+                                                    int queueSize,
+                                                    ILogger logger)
+        {
+            Simulation simulation = new Simulation();
+
+
+
+            var Operators = new List<Processor>();
+
+            var data = new WarehouseData();
+
+            Operators.Add(new Processor());
+
+            RealDistributionBuilder distBuilder = new RealDistributionBuilder(simulation);
+
+            distBuilder.Logger = logger;
+
+            var ppxMinutes = distBuilder.GetPutsPerX(selectedDays.First(), x);
+
+            var ppxSchedule = new Dictionary<int, int>();
+
+            for (int min = startMin; min < startMin + 1440; min += x)
+            {
+                int startSecond = (min - startMin) * 60;
+                ppxSchedule.Add(startSecond, ppxMinutes[(min % 1440) / x]);
+            }
+
+            logger.LogPutsPerHour("PPX_Schedule_" + x, ppxSchedule);
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+
+            IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
+                                                               ppxSchedule,
+                                                               Operators,
+                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildRecircTimeDist(selectedDays, 300),
+                                                               simulation,
+                                                                disposalBlock);
+            Location P06L = data.P06;
+
+            Dictionary<int, IDestinationBlock> locationDict = new Dictionary<int, IDestinationBlock>()
+            {
+                { P06L.LocationID, P06 }
+            };
+
+
+            Dictionary<DateTime, int> breakpoints = new Dictionary<DateTime, int>()
+            {
+                { new DateTime(1,1,1,7,0,0), 0 },
+                { new DateTime(1,1,1,21,0,0), 3600 },
+                { new DateTime(1,1,1,22,0,0), 54000 },
+            };
+
+            var ArrivalBlock = new IntervalArrivalBlock(distBuilder.BuildIntervalDists(breakpoints, selectedDays, 600), distBuilder.BuildDestinationDist(selectedDays, locationDict, disposalBlock), simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, endTime, firstArrival);
+
+            return simulation;
+        }
+        public static Simulation SimWithPPXSchedule(List<DateTime> selectedDays,
+                                                    int x,
+                                                    int startMin,
+                                                    int endTime,
+                                                    int queueSize,
+                                                    ILogger logger)
+        {
+            Simulation simulation = new Simulation();
+
+
+
+            var Operators = new List<Processor>();
+
+            var data = new WarehouseData();
+
+            Operators.Add(new Processor());
+
+            RealDistributionBuilder distBuilder = new RealDistributionBuilder(simulation);
+
+            distBuilder.Logger = logger;
+
+            var ppxMinutes = distBuilder.GetPutsPerX(selectedDays.First(), x);
+
+            var ppxSchedule = new Dictionary<int, int>();
+
+            for (int min = startMin; min < startMin + 1440; min+=x)
+            {
+                int startSecond = (min - startMin) * 60;
+                ppxSchedule.Add(startSecond, ppxMinutes[(min % 1440)/x]);
+            }
+
+            logger.LogPutsPerHour("PPX_Schedule_" + x, ppxSchedule);
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+
+            IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
+                                                               ppxSchedule,
+                                                               Operators,
+                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildRecircTimeDist(selectedDays, 300),
+                                                               simulation,
+                                                                disposalBlock);
+            Location P06L = data.P06;
+
+            Dictionary<int, IDestinationBlock> locationDict = new Dictionary<int, IDestinationBlock>()
+            {
+                { P06L.LocationID, P06 }
+            };
+
+            var ArrivalBlock = new ArrivalBlock(distBuilder.BuildArrivalDist(selectedDays, 300), distBuilder.BuildDestinationDist(selectedDays, locationDict, disposalBlock), simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, endTime, firstArrival);
+
+            return simulation;
+        }
         public static Simulation SimWithPPHSchedule(List<DateTime> selectedDays, 
                                                     int startHour,
                                                     int endTime, 

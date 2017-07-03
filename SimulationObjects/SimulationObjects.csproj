@@ -80,6 +80,8 @@
     <Compile Include="Results\ISimResults.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\ArrivalBlock.cs" />
     <Compile Include="Entities\Batch.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\IArrivalBlock.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\IntervalArrivalBlock.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\MultiArrivalBlock.cs" />
     <Compile Include="SimBlocks\DisposalBlock.cs" />
     <Compile Include="Distributions\EmpiricalDist.cs" />

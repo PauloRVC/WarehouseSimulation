@@ -155,6 +155,46 @@ namespace Infrastructure
 
             return recircTimes;
         }
+        public Dictionary<int, int> GetPutsPerZMins(DateTime day, int z)
+        {
+            Dictionary<DateTime, int> indexLookup = new Dictionary<DateTime, int>();
+            int i = 0;
+            DateTime time = new DateTime(day.Year, day.Month, day.Day, 0, 0, 0);
+
+            indexLookup.Add(time, i);
+
+            do
+            {
+                i++;
+                time = time.AddMinutes(z);
+                indexLookup.Add(time, i);
+            } while (time.Day == day.Day);
+
+            var intermed = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                               && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date).
+                                                GroupBy(x => x.Order.BatchID).Select(x => x.OrderByDescending(y => y.PutTimestamp).FirstOrDefault()).
+                                                ToList();
+
+            var lastPuts = intermed.GroupBy(x => GetTimeIndex(indexLookup, x.PutTimestamp.Value)).
+                                                Select(x => new { timeIndex = x.Key, count = x.Count() });
+
+            var pph = new Dictionary<int, int>();
+            foreach (int k in indexLookup.Values)
+            {
+                pph.Add(k, 0);
+            }
+
+            foreach (var a in lastPuts)
+            {
+                pph[a.timeIndex] += a.count;
+            }
+
+            return pph;
+        }
+        private int GetTimeIndex(Dictionary<DateTime, int> indexLookup, DateTime time)
+        {
+            return indexLookup[indexLookup.Keys.Where(x => x <= time).Max()];
+        }
         public List<Tuple<int, List<Tuple<int,DateTime>>>>GetRecircGroups(DateTime day)
         {
             var dbresults = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&

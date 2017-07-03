@@ -30,8 +30,48 @@ namespace WarehouseSimulation
 
             //RunDefaultSim();
 
-            RunPPHSim();
+            RunPPXSim();
             
+        }
+        private void RunPPXSim()
+        {
+            var Data = new WarehouseData();
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,10)
+            };
+
+
+            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+
+            logger.LogDBStats("DBStats", availability.First());
+
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var sim = SimulationFactory.SimWithPPXScheduleAndInterval(availability, 5, 360, 57600, 100, logger);
+
+                sim.Run();
+
+                logger.LogResults(sim.Results, "Results_" + i, 57600);
+
+                var t = sim.Results.CalcNumOut();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+            }
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+            }
         }
         private void RunPPHSim()
         {

@@ -16,8 +16,11 @@ namespace SimulationObjects.SimBlocks
         }
         public IEvent GetNextEvent(IEntity batch)
         {
-            Simulation.Results.ReportDisposal(batch, Simulation.CurrentTime);
-
+            
+            if (Simulation.CurrentTime <= Simulation.EndTime)
+            {
+                Simulation.Results.ReportDisposal(batch, Simulation.CurrentTime);
+            }
             return null;
         }
     }

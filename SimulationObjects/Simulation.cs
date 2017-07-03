@@ -14,7 +14,7 @@ namespace SimulationObjects
     {
         private List<IEvent> EventQueue;
 
-        private ArrivalBlock ArrivalBlock;
+        private IArrivalBlock ArrivalBlock;
 
         public int EndTime { get; private set; }
 
@@ -25,7 +25,7 @@ namespace SimulationObjects
             CurrentTime = 0;
             Results = new SimulationResults();
         }
-        public void Initialize(ArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
+        public void Initialize(IArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
         {
             ArrivalBlock = arrivalBlock;
             EndTime = endTime;
