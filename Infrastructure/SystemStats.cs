@@ -42,12 +42,47 @@ namespace Infrastructure
             sumDateDiffs( x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList() )).Average());
             AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList())).Average());
         }
+        public SystemStats(DateTime day, double anomolyLimit)
+        {
+            var data = new WarehouseData();
+
+            ArrivalCount = CountArrivals(data.FirstArrivals(data.Scanner901, day), data);
+            ExitCount = data.GetNPuts(day);
+
+            AvgTimeInSystem = CalcAvgTimeInSystem(data, day);
+            AvgTimeInProcess = CalcAvgTimeInProcess(data, day);
+            AvgTimeInQueue = CalcAvgTimeInQueue(data, day);
+
+            var recircGroups = data.GetRecircGroups(day);
+
+            var putWallRecircGroups = recircGroups.Where(x => x.Item2.Select(y => y.Item1).Contains(data.P06.LocationID));
+            var nonPutwallRecircGroups = recircGroups.Where(x => !x.Item2.Select(y => y.Item1).Contains(data.P06.LocationID));
+
+            AvgNumTimesRecirc = new Dictionary<ProcessType, double>();
+            AvgNumTimesRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x => Math.Max(0, x.Item2.Where(y => y.Item1 == data.P06.LocationID).Count())).Average());
+            AvgNumTimesRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => Math.Max(0, x.Item2.Count)).Average());
+
+            AvgTimeRecirc = new Dictionary<ProcessType, double>();
+            AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
+                                    sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+            AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+        }
         private double sumDateDiffs(List<DateTime> times)
         {
             double sum = 0;
             for(int i = 1; i < times.Count; i++)
             {
                 sum += times[i].Subtract(times[i - 1]).TotalSeconds;
+            }
+            return sum;
+        }
+        private double sumDateDiffs(List<DateTime> times, double anomolyLimit)
+        {
+            double sum = 0;
+            for (int i = 1; i < times.Count; i++)
+            {
+                if(times[i].Subtract(times[i - 1]).TotalSeconds <= anomolyLimit)
+                    sum += times[i].Subtract(times[i - 1]).TotalSeconds;
             }
             return sum;
         }

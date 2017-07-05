@@ -14,9 +14,9 @@ namespace SimulationObjects.Results
 
         public Statistic(List<double> observations)
         {
-            if(observations.Count > 0)
+            Observations = observations;
+            if (observations.Count > 0)
             {
-                Observations = observations;
                 Average = Observations.Average();
                 StdDev = Observations.StandardDeviation();
             }

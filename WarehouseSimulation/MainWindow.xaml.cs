@@ -34,7 +34,7 @@ namespace WarehouseSimulation
 
             //RunDefaultSim();
 
-            //RunPPXSim();
+            RunPPXSim();
             
         }
         private void RunPPXSim()
@@ -53,17 +53,21 @@ namespace WarehouseSimulation
             var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
 
             logger.LogDBStats("DBStats", availability.First());
-
+            logger.LogDBStats("DBStats", availability.First(), 600);
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
 
             for (int i = 1; i <= 20; i++)
             {
-                var sim = SimulationFactory.SimWithPPXScheduleAndInterval(availability, 5, 360, 57600, 100, logger);
+                var sim = SimulationFactory.SimWithPPXScheduleAndInterval(availability, 10, 360, 57600, 150, logger);
 
                 sim.Run();
 
+                logger.PauseLogging = false;
+
                 logger.LogResults(sim.Results, "Results_" + i, 57600);
+
+                logger.PauseLogging = true;
 
                 FinalResults.AddSimResults(sim.Results);
 

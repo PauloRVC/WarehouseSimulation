@@ -15,6 +15,8 @@ namespace SimulationObjects.Utils
     public class VerboseLogger : ILogger
     {
         private string FolderPath;
+        public bool PauseLogging { get; set; } = false;
+
         public VerboseLogger(string folderPath)
         {
             FolderPath = folderPath;
@@ -26,6 +28,8 @@ namespace SimulationObjects.Utils
 
         public void LogBatches(string name, List<Tuple<string, DateTime>> results)
         {
+            if (PauseLogging)
+                return;
             name += ".txt";
 
             while (System.IO.File.Exists(FolderPath + @"\" + name))
@@ -45,6 +49,8 @@ namespace SimulationObjects.Utils
 
         public void LogDistribution(string name, List<Location> observations)
         {
+            if (PauseLogging)
+                return;
             name += ".txt";
 
             while (System.IO.File.Exists(FolderPath + @"\" + name))
@@ -64,6 +70,8 @@ namespace SimulationObjects.Utils
 
         public void LogDistribution(string name, List<int> observations)
         {
+            if (PauseLogging)
+                return;
             name += ".txt";
 
             while (System.IO.File.Exists(FolderPath + @"\" + name))
@@ -83,6 +91,8 @@ namespace SimulationObjects.Utils
 
         public void LogPutsPerHour(string name, Dictionary<int, int> pph)
         {
+            if (PauseLogging)
+                return;
             name += ".txt";
 
             while (System.IO.File.Exists(FolderPath + @"\" + name))
@@ -102,6 +112,8 @@ namespace SimulationObjects.Utils
 
         public void LogResults(ISimResults results, string name, int totalTIme)
         {
+            if (PauseLogging)
+                return;
             name += ".txt";
 
             while (System.IO.File.Exists(FolderPath + @"\" + name))
@@ -186,6 +198,18 @@ namespace SimulationObjects.Utils
         }
         public void LogDBStats(string name, DateTime day)
         {
+            var dbStats = new SystemStats(day);
+
+            WriteDBStatsToFile(name, dbStats);
+        }
+        public void LogDBStats(string name, DateTime day, double anomolyLimit)
+        {
+            var dbStats = new SystemStats(day, anomolyLimit);
+
+            WriteDBStatsToFile(name, dbStats);
+        }
+        private void WriteDBStatsToFile(string name, SystemStats dbStats)
+        {
             name += ".txt";
 
             while (System.IO.File.Exists(FolderPath + @"\" + name))
@@ -196,7 +220,6 @@ namespace SimulationObjects.Utils
 
             using (var writer = new System.IO.StreamWriter(FolderPath + @"\" + name))
             {
-                var dbStats = new SystemStats(day);
 
                 writer.WriteLine("Statistic \t Putwall \t NonPutwall");
 
@@ -213,7 +236,7 @@ namespace SimulationObjects.Utils
                 writer.WriteLine("Avg Num Recirc \t" + dbStats.AvgNumTimesRecirc[ProcessType.Putwall] + "\t" + dbStats.AvgNumTimesRecirc[ProcessType.NonPutwall]);
 
                 writer.WriteLine("Avg Time in Process \t" + dbStats.AvgTimeInProcess + "\t N/A");
-                
+
             }
         }
     }
