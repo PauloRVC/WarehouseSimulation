@@ -34,8 +34,225 @@ namespace WarehouseSimulation
 
             //RunDefaultSim();
 
-            RunPPXSim();
-            
+            //RunPPXSim();
+            //newPPXSim();
+            wipSim();
+
+        }
+        private void wipSim()
+        {
+            var Data = new WarehouseData();
+
+            var FinalResults = new MetaResults();
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,10)
+            };
+
+
+            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+
+            logger.LogDBStats("DBStats", availability.First());
+            logger.LogDBStats("DBStats", availability.First(), 600);
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
+                {
+                    //complete distribution
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(22,0,0)),
+
+                    //different intervals
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(6,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,30,0), new TimeSpan(7,0,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(9,0,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(13,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,30,0), new TimeSpan(15,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,30,0), new TimeSpan(22,0,0)),
+
+                    //hourly intervals
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(7,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(8,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(8,0,0), new TimeSpan(9,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(10,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(10,0,0), new TimeSpan(11,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(11,0,0), new TimeSpan(12,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(12,0,0), new TimeSpan(13,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,0,0), new TimeSpan(14,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(14,0,0), new TimeSpan(15,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,0,0), new TimeSpan(16,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(16,0,0), new TimeSpan(17,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(17,0,0), new TimeSpan(18,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(18,0,0), new TimeSpan(19,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(19,0,0), new TimeSpan(20,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(20,0,0), new TimeSpan(21,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(21,0,0), new TimeSpan(22,0,0)),
+                };
+
+                var sim = SimulationFactory.WIPSim(availability, 5, 360, 57600, 150, 1, logger, intervals, 600);
+
+                sim.Run();
+
+                logger.PauseLogging = false;
+
+                logger.LogResults(sim.Results, "Results_" + i, 3*57600);
+
+                logger.PauseLogging = true;
+
+                FinalResults.AddSimResults(sim.Results);
+
+                var t = sim.Results.CalcNumOut();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+            }
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\Dematic\Desktop\SimLog\FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("Putwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.PutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.PutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.PutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+
+                writer.WriteLine();
+                writer.WriteLine("NonPutwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.NonPutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.NonPutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.NonPutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.NonPutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
+
+            }
+        }
+        private void newPPXSim()
+        {
+            var Data = new WarehouseData();
+
+            var FinalResults = new MetaResults();
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,10)
+            };
+
+
+            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+
+            logger.LogDBStats("DBStats", availability.First());
+            logger.LogDBStats("DBStats", availability.First(), 600);
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
+                {
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(6,30,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,30,0), new TimeSpan(7,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(9,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(13,30,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,30,0), new TimeSpan(24,0,0)),
+                };
+
+                var sim = SimulationFactory.SimWithPPXScheduleAndInterval2(availability, 5, 360, 57600, 150, logger, intervals, 600);
+
+                sim.Run();
+
+                logger.PauseLogging = false;
+
+                logger.LogResults(sim.Results, "Results_" + i, 57600);
+
+                logger.PauseLogging = true;
+
+                FinalResults.AddSimResults(sim.Results);
+
+                var t = sim.Results.CalcNumOut();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+            }
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\Dematic\Desktop\SimLog\FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("Putwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.PutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.PutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.PutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+
+                writer.WriteLine();
+                writer.WriteLine("NonPutwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.NonPutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.NonPutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.NonPutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.NonPutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
+
+            }
         }
         private void RunPPXSim()
         {
@@ -50,7 +267,8 @@ namespace WarehouseSimulation
 
 
             //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
-            var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
 
             logger.LogDBStats("DBStats", availability.First());
             logger.LogDBStats("DBStats", availability.First(), 600);
@@ -77,7 +295,8 @@ namespace WarehouseSimulation
             }
 
             //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
-            using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(@"C:\Users\Dematic\Desktop\SimLog\FINALRESULTS.txt"))
             {
                 foreach (Tuple<int, int> t2 in throughput)
                 {

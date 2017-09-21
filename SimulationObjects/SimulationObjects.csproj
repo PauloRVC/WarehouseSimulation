@@ -80,10 +80,12 @@
     <Compile Include="Results\EntityStatistics.cs" />
     <Compile Include="Results\ISimResults.cs" />
     <Compile Include="Results\MetaResults.cs" />
+    <Compile Include="Results\ResultsWithWarmup.cs" />
     <Compile Include="Results\Statistic.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\ArrivalBlock.cs" />
     <Compile Include="Entities\Batch.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\IArrivalBlock.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\InterarrivalBlock2.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\IntervalArrivalBlock.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\MultiArrivalBlock.cs" />
     <Compile Include="SimBlocks\DisposalBlock.cs" />

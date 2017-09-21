@@ -124,6 +124,64 @@ namespace SimulationObjects.Distributions
 
         }
 
+        public List<IDistribution<int>> BuildArrivalDist(List<DateTime> selectedDays, int anomolyLimit, List<Tuple<TimeSpan, TimeSpan>> periods)
+        {
+
+            var interArrivalList = new List<List<int>>();
+
+            var scanner901 = data.Scanner901;
+
+            var distributions = new List<IDistribution<int>>();
+
+            for(int k = 0; k < periods.Count; k++)
+            {
+                //For each day, find the ordered list of the time first arrival of each batch at scanner 901
+                int j = 1;
+                foreach (DateTime day in selectedDays)
+                {
+                    var todaysArrivals = data.FirstArrivals(scanner901, day).
+                                                Select(x => x.Timestamp).
+                                                Where(x => x.TimeOfDay >= periods[k].Item1 && x.TimeOfDay <= periods[k].Item2).
+                                                OrderBy(x => x).ToList();
+
+                    var todaysInterArrivalTimes = new List<int>();
+
+                    for (int i = 1; i < todaysArrivals.Count; i++)
+                    {
+                        todaysInterArrivalTimes.Add((int)todaysArrivals[i].Subtract(todaysArrivals[i - 1]).TotalSeconds);
+                    }
+
+                    interArrivalList.Add(todaysInterArrivalTimes);
+
+                    Logger.LogDistribution("ArrivalDistDay." + k + "." + j, todaysInterArrivalTimes);
+
+                    j++;
+                }
+
+                //var allObservations = interArrivalList.SelectMany(x => x).Where(x => x < 70);
+
+                var allObservations = interArrivalList.SelectMany(x => x).Where(x => x < anomolyLimit);
+
+                if (allObservations.Any(x => x < 0))
+                    throw new InvalidOperationException();
+
+                int obsCount = allObservations.Count();
+
+                var probs = allObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / obsCount, x.Key)).ToList();
+
+                if (probs.Select(x => x.Item1).Sum() < 0.99)
+                    throw new InvalidOperationException();
+
+                var arrivalDist = new EmpiricalDist(probs);
+
+                distributions.Add(arrivalDist);
+            }
+            
+
+            return distributions;
+
+        }
+
         public IDistribution<IDestinationBlock> BuildDestinationDist(List<DateTime> selectedDays, 
                                                             Dictionary<int, IDestinationBlock> processBlocks, 
                                                             IDestinationBlock nextDestination)

@@ -32,7 +32,7 @@ namespace SimulationObjects.Results
 
         public int EndTime { get; set; }
         
-        public void ReportArrival(IEntity entity, int arrivalTime)
+        public virtual void ReportArrival(IEntity entity, int arrivalTime)
         {
             if (ArrivalTimes.ContainsKey(entity))
                 throw new InvalidOperationException();
@@ -45,7 +45,7 @@ namespace SimulationObjects.Results
             TimeInProcess.Add(entity, 0);
         }
 
-        public void ReportDisposal(IEntity entity, int disposalTime)
+        public virtual void ReportDisposal(IEntity entity, int disposalTime)
         {
             if (DisposalTimes.ContainsKey(entity))
                 throw new InvalidOperationException();
@@ -53,7 +53,7 @@ namespace SimulationObjects.Results
             DisposalTimes.Add(entity, disposalTime);
         }
 
-        public void ReportProcessRealization(IEntity entity, 
+        public virtual void ReportProcessRealization(IEntity entity, 
                                              int startTime, 
                                              int endTime, 
                                              IEnumerable<IResource> consumedResources,
@@ -92,7 +92,7 @@ namespace SimulationObjects.Results
             }
         }
 
-        public void ReportRecirculation(IEntity entity, int startTime, int endTime)
+        public virtual void ReportRecirculation(IEntity entity, int startTime, int endTime)
         {
             endTime = Math.Min(endTime, EndTime);
 
@@ -107,7 +107,7 @@ namespace SimulationObjects.Results
                 TimesRecirculated.Add(entity, 1);
             }
         }
-        public void ReportQueueTime(IEntity entity, int startTime, int endTime)
+        public virtual void ReportQueueTime(IEntity entity, int startTime, int endTime)
         {
             endTime = Math.Min(endTime, EndTime);
 

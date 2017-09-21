@@ -15,6 +15,7 @@ namespace SimulationObjects.Results
         public Statistic(List<double> observations)
         {
             Observations = observations;
+
             if (observations.Count > 0)
             {
                 Average = Observations.Average();

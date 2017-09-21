@@ -18,6 +18,8 @@ namespace SimulationObjects.SimBlocks
 
         private int QueueSize;
 
+        
+
         public PutwallWithPPHSchedule(int queueSize,
                       Dictionary<int, int> pPHSchedule,
                       List<Processor> operators,

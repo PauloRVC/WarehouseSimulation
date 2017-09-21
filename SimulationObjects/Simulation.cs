@@ -25,6 +25,12 @@ namespace SimulationObjects
             CurrentTime = 0;
             Results = new SimulationResults();
         }
+        public Simulation(SimulationResults results)
+        {
+            CurrentTime = 0;
+            Results = new SimulationResults();
+            Results = results;
+        }
         public void Initialize(IArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
         {
             ArrivalBlock = arrivalBlock;
