@@ -20,27 +20,26 @@ namespace SimulationObjects
 
         public int CurrentTime { get; private set; }
         public SimulationResults Results { get; private set; }
-        public Simulation()
+        public Simulation(int endTime)
         {
             CurrentTime = 0;
-            Results = new SimulationResults();
+            EndTime = endTime;
+            Results = new SimulationResults(endTime);
         }
-        public Simulation(SimulationResults results)
+        public Simulation(SimulationResults results, int endTime)
         {
             CurrentTime = 0;
-            Results = new SimulationResults();
+            EndTime = endTime;
             Results = results;
         }
-        public void Initialize(IArrivalBlock arrivalBlock, int endTime, IEvent firstArrival)
+        public void Initialize(IArrivalBlock arrivalBlock, IEvent firstArrival)
         {
             ArrivalBlock = arrivalBlock;
-            EndTime = endTime;
             
             EventQueue = new List<IEvent>() { firstArrival };
         }
         public SimulationResults Run()
         {
-            Results.EndTime = EndTime;
 
             int iterCount = 0;
             while (EventQueue[0].Time <= EndTime)

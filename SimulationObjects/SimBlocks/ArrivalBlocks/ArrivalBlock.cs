@@ -27,6 +27,8 @@ namespace SimulationObjects.SimBlocks
             var Batch = new Batch(Destination);
 
             int dur = ArrivalTimeDist.DrawNext();
+
+            Simulation.Results.ReportInterarrivalTime(Simulation.CurrentTime, dur);
             
             var Time = Simulation.CurrentTime + dur;
 

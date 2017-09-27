@@ -11,9 +11,9 @@ namespace SimulationObjects.SimBlocks
 {
     public class InterarrivalBlock2 : SimBlock, IArrivalBlock
     {
-        private IDistribution<IDestinationBlock> DestinationDist;
+        protected IDistribution<IDestinationBlock> DestinationDist;
 
-        private Dictionary<Tuple<int, int>, IDistribution<int>> InterArrivalDists;
+        protected Dictionary<Tuple<int, int>, IDistribution<int>> InterArrivalDists;
 
         public InterarrivalBlock2(Dictionary<Tuple<int, int>, IDistribution<int>> interArrivalDists,
                                     IDistribution<IDestinationBlock> destinationDist,
@@ -22,7 +22,7 @@ namespace SimulationObjects.SimBlocks
             InterArrivalDists = interArrivalDists;
             DestinationDist = destinationDist;
         }
-        public IEvent GetNextEvent()
+        public virtual IEvent GetNextEvent()
         {
             var Destination = DestinationDist.DrawNext();
             var Batch = new Batch(Destination);
@@ -32,6 +32,8 @@ namespace SimulationObjects.SimBlocks
             int dur = interArrivalDist.DrawNext();
 
             var Time = Simulation.CurrentTime + dur;
+
+            Simulation.Results.ReportInterarrivalTime(Simulation.CurrentTime, dur);
 
             if (Time <= Simulation.EndTime)
             {

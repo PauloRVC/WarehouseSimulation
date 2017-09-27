@@ -16,7 +16,7 @@ namespace SimulationObjects.SimBlocks
 
         private List<IEntity> Queue = new List<IEntity>();
 
-        private int QueueSize;
+        public int QueueSize { get; private set; }
 
         
 
@@ -74,6 +74,8 @@ namespace SimulationObjects.SimBlocks
                     NextEvent = new RecirculateEvent(batch, Time);
                 }
             }
+
+            Simulation.Results.ReportQueueSize(Simulation.CurrentTime, Queue.Count);
 
             return NextEvent;
         }

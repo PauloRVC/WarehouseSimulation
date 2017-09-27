@@ -19,7 +19,7 @@ namespace SimulationObjects.Results
         //      process time
         //      recirculation time
 
-        private Dictionary<IEntity, int> ArrivalTimes = new Dictionary<IEntity, int>();
+        protected Dictionary<IEntity, int> ArrivalTimes = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> DisposalTimes = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimeInProcess = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimeInRecirculation = new Dictionary<IEntity, int>();
@@ -30,7 +30,17 @@ namespace SimulationObjects.Results
 
         private Dictionary<SimBlock, List<int>> ProcessTimes = new Dictionary<SimBlock, List<int>>();
 
-        public int EndTime { get; set; }
+        private List<Tuple<int, int>> InterarrivalTimes = new List<Tuple<int, int>>();
+        private int[] ItemsInRecirc;
+        private Dictionary<int, int> QueueSizeOverTime = new Dictionary<int, int>();
+
+        private int EndTime;
+
+        public SimulationResults(int endTime)
+        {
+            EndTime = endTime;
+            ItemsInRecirc = new int[EndTime];
+        }
         
         public virtual void ReportArrival(IEntity entity, int arrivalTime)
         {
@@ -96,6 +106,11 @@ namespace SimulationObjects.Results
         {
             endTime = Math.Min(endTime, EndTime);
 
+            for(int i = startTime; i < endTime; i++)
+            {
+                ItemsInRecirc[i]++;
+            }
+
             if (TimeInRecirculation.ContainsKey(entity))
             {
                 TimeInRecirculation[entity] += endTime - startTime;
@@ -120,6 +135,24 @@ namespace SimulationObjects.Results
                 TimeInQueue.Add(entity, endTime - startTime);
             }
         }
+        public virtual void ReportInterarrivalTime(int time, int duration)
+        {
+            InterarrivalTimes.Add(new Tuple<int, int>(time, duration));
+        }
+        public virtual void ReportQueueSize(int time, int queueSize)
+        {
+            if (QueueSizeOverTime.ContainsKey(time))
+            {
+                QueueSizeOverTime[time] = queueSize;
+            }
+            else
+            {
+                QueueSizeOverTime.Add(time, queueSize);
+            }
+        }
+
+
+
 
 
         public Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInSystemStats()
@@ -241,6 +274,18 @@ namespace SimulationObjects.Results
             return results;
         }
 
-        
+        public List<Tuple<int, int>> OutputInterarrivalTimes()
+        {
+            return InterarrivalTimes;
+        }
+        public int[] OutputItemsInRecirc()
+        {
+            return ItemsInRecirc;
+        }
+        public Dictionary<int, int> OutputQueueSize()
+        {
+            return QueueSizeOverTime;
+        }
+
     }
 }

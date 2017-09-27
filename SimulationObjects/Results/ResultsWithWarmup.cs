@@ -13,7 +13,7 @@ namespace SimulationObjects.Results
     {
         private int CollectionStart;
 
-        public ResultsWithWarmup(int collectionStart)
+        public ResultsWithWarmup(int collectionStart, int endTime): base(endTime)
         {
             CollectionStart = collectionStart;
         }
@@ -24,7 +24,7 @@ namespace SimulationObjects.Results
         }
         public override void ReportDisposal(IEntity entity, int disposalTime)
         {
-            if (disposalTime >= CollectionStart)
+            if (disposalTime >= CollectionStart & base.ArrivalTimes.Keys.Contains(entity))
                 base.ReportDisposal(entity, disposalTime);
         }
         public override void ReportProcessRealization(IEntity entity,
@@ -45,6 +45,16 @@ namespace SimulationObjects.Results
         {
             if (startTime >= CollectionStart)
                 base.ReportQueueTime(entity, startTime, endTime);
+        }
+        public override void ReportInterarrivalTime(int time, int duration)
+        {
+            if(time >= CollectionStart)
+                base.ReportInterarrivalTime(time, duration);
+        }
+        public override void ReportQueueSize(int time, int queueSize)
+        {
+            if (time >= CollectionStart)
+                base.ReportQueueSize(time, queueSize);
         }
     }
 }

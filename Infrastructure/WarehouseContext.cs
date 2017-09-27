@@ -210,6 +210,94 @@ namespace Infrastructure
                 Select(x => new Tuple<int, List<Tuple<int, DateTime>>>(x.bid, x.pair.Select(y => new Tuple<int, DateTime>(y.IntendedDestinationID, y.Timestamp)).
                 ToList())).ToList();
         }
+        public List<Tuple<DateTime, int>> GetInterarrivalTimesOverTime(DateTime day)
+        {
+            var results = new List<Tuple<DateTime, int>>();
+
+            var batchScans = FirstArrivals(Scanner901, day);
+
+            var consecutiveTimes = batchScans.Select(x => x.Timestamp).OrderBy(x => x).ToList();
+
+            for (int i = 1; i < consecutiveTimes.Count; i++)
+            {
+                results.Add(new Tuple<DateTime, int>(consecutiveTimes[i], (int)consecutiveTimes[i].Subtract(consecutiveTimes[i - 1]).TotalSeconds));
+            }
+
+            return results;
+        }
+        public int[] GetQueueSizeOverTime(DateTime day)
+        {
+            var QueueSize = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
+
+            var last901 = LastArrivals(Scanner901, day);
+
+            var batchIDs = last901.Select(x => x.BatchID).ToList();
+
+            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID)).GroupBy(x => x.Order.BatchID).ToList().
+                                                ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
+
+            foreach (var lastArrival in last901)
+            {
+                if (puts.ContainsKey(lastArrival.BatchID))
+                {
+                    var t1 = lastArrival.Timestamp;
+                    var t2 = puts[lastArrival.BatchID].Value;
+
+                    int start = (int)t1.TimeOfDay.TotalSeconds;
+                    int end = (int)t2.TimeOfDay.TotalSeconds;
+
+                    for (int i = start; i <= end; i++)
+                    {
+                        QueueSize[i]++;
+                    }
+                }
+            }
+
+            return QueueSize;
+        }
+        public int[] GetItemsInRecircOverTime(DateTime day)
+        {
+            var ItemsInRecirc = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
+            var groups = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+                                               DbFunctions.TruncateTime(x.Timestamp) == day.Date).
+                                               GroupBy(x => x.BatchID).Where(x => x.Count() > 1).Select(x => x.OrderBy(y => y.Timestamp));
+
+            foreach(var group in groups)
+            {
+                var t1 = group.First().Timestamp;
+                var t2 = group.Last().Timestamp;
+
+                int start = (int)t1.TimeOfDay.TotalSeconds;
+                int end = (int)t2.TimeOfDay.TotalSeconds;
+
+                for(int i = start; i <= end; i++)
+                {
+                    ItemsInRecirc[i]++;
+                }
+            }
+
+            return ItemsInRecirc;
+        }
+        public List<Tuple<DateTime, DateTime>> FindBreaks(DateTime day, int minBreakTime)
+        {
+            var breakTimes = new List<Tuple<DateTime, DateTime>>();
+
+            var batchScans = FirstArrivals(Scanner901, day);
+
+            var consecutiveTimes = batchScans.Select(x => x.Timestamp).OrderBy(x => x).ToList();
+
+            for (int i = 1; i < consecutiveTimes.Count; i++)
+            {
+                if(consecutiveTimes[i].Subtract(consecutiveTimes[i-1]).TotalSeconds > minBreakTime)
+                {
+                    breakTimes.Add(new Tuple<DateTime, DateTime>(consecutiveTimes[i - 1], consecutiveTimes[i]));
+                }
+            }
+
+            return breakTimes;
+        }
 
         
     }
