@@ -48,7 +48,8 @@ namespace WarehouseSimulation
 
             var FinalResults = new MetaResults();
 
-            string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
 
             var availability = new List<DateTime>()
             {
@@ -92,9 +93,9 @@ namespace WarehouseSimulation
             
 
 
-            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
             //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
-            var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
 
 
 
@@ -141,7 +142,7 @@ namespace WarehouseSimulation
 
                 var breakTimes = Data.FindBreaks(availability[0], 600);
                 
-                var sim = SimulationFactory.WIPSimWithBreaks(availability, 5, 360, 64800, 150, 0, logger, intervals, 600, breakTimes);
+                var sim = SimulationFactory.WIPSimWithBreaks(availability, 5, 360, 64800, 60, 1, logger, intervals, 600, breakTimes);
 
                 sim.Run();
 

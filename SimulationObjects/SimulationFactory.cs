@@ -39,10 +39,13 @@ namespace SimulationObjects
             {
                 if (brk.Item1.TimeOfDay.TotalMinutes > startMin)
                 {
-                    int t1 = (int)brk.Item1.TimeOfDay.TotalSeconds - startMin * 60;
-                    int t2 = (int)brk.Item2.TimeOfDay.TotalSeconds - startMin * 60;
+                    for(int i = 0; i <= warmUpDays; i++)
+                    {
+                        int t1 = ((int)brk.Item1.TimeOfDay.TotalSeconds - startMin * 60) + (endTime*i);
+                        int t2 = (int)brk.Item2.TimeOfDay.TotalSeconds - startMin * 60 + (endTime * i);
 
-                    breakTimes.Add(new Tuple<int, int>(t1, t2));
+                        breakTimes.Add(new Tuple<int, int>(t1, t2));
+                    }
                 }
             }
 
