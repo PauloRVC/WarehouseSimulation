@@ -257,6 +257,36 @@ namespace Infrastructure
 
             return QueueSize;
         }
+        public List<int> GetTimeInQueue(DateTime day)
+        {
+            var qTimes = new List<int>();
+
+            var last901 = LastArrivals(Scanner901, day);
+
+            var batchIDs = last901.Select(x => x.BatchID).ToList();
+
+            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID)).GroupBy(x => x.Order.BatchID).ToList().
+                                                ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
+
+            foreach (var lastArrival in last901)
+            {
+                if (puts.ContainsKey(lastArrival.BatchID))
+                {
+                    var t1 = lastArrival.Timestamp;
+                    var t2 = puts[lastArrival.BatchID].Value;
+
+                    if (t2.Subtract(t1).TotalSeconds < 0)
+                        throw new InvalidOperationException();
+
+                    qTimes.Add((int)t2.Subtract(t1).TotalSeconds);
+                    
+                }
+            }
+
+            return qTimes;
+        }
         public int[] GetItemsInRecircOverTime(DateTime day)
         {
             var ItemsInRecirc = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];

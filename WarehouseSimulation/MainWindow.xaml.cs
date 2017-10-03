@@ -39,10 +39,10 @@ namespace WarehouseSimulation
 
 
             //wipSim();
-            wipSimWithBreaks();
-
+            wipSimWithBreaksAndQTime();
+            //wipSimWithBreaksAndOperators();
         }
-        private void wipSimWithBreaks()
+        private void wipSimWithBreaksAndQTime()
         {
             var Data = new WarehouseData();
 
@@ -59,6 +59,7 @@ namespace WarehouseSimulation
             var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
             var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
             var queueSizeOverTime = Data.GetQueueSizeOverTime(availability[0]);
+            var qTimes = Data.GetTimeInQueue(availability[0]);
 
             using (var writer = new System.IO.StreamWriter(basePath + "InterArrivals_over_time_real.txt"))
             {
@@ -90,7 +91,380 @@ namespace WarehouseSimulation
                 }
             }
 
-            
+            using (var writer = new System.IO.StreamWriter(basePath + "QTimes.txt"))
+            {
+                writer.WriteLine("Time in Queue");
+
+                foreach (double time in qTimes)
+                {
+                    writer.WriteLine(time);
+                }
+            }
+
+
+
+
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+
+
+
+            logger.LogDBStats("DBStats", availability.First());
+            logger.LogDBStats("DBStats", availability.First(), 600);
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
+                {
+                    //complete distribution
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(22,0,0)),
+
+                    //different intervals
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(6,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,30,0), new TimeSpan(7,0,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(9,0,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(13,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,30,0), new TimeSpan(15,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,30,0), new TimeSpan(22,0,0)),
+
+                    //hourly intervals
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(7,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(8,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(8,0,0), new TimeSpan(9,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(10,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(10,0,0), new TimeSpan(11,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(11,0,0), new TimeSpan(12,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(12,0,0), new TimeSpan(13,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,0,0), new TimeSpan(14,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(14,0,0), new TimeSpan(15,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,0,0), new TimeSpan(16,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(16,0,0), new TimeSpan(17,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(17,0,0), new TimeSpan(18,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(18,0,0), new TimeSpan(19,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(19,0,0), new TimeSpan(20,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(20,0,0), new TimeSpan(21,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(21,0,0), new TimeSpan(22,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(22,0,0), new TimeSpan(23,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(23,0,0), new TimeSpan(24,0,0)),
+                };
+
+                var breakTimes = Data.FindBreaks(availability[0], 600);
+
+                var sim = SimulationFactory.WIPSimWithBreaksAndQTime(availability, 30, 360, 64800, 100, 1, logger, intervals, 600, breakTimes);
+
+                sim.Run();
+
+                logger.PauseLogging = false;
+
+                logger.LogResults(sim.Results, "Results_" + i, 3 * 64800);
+
+                logger.PauseLogging = true;
+
+                FinalResults.AddSimResults(sim.Results);
+
+                var t = sim.Results.CalcNumOut();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+
+                OutputTimeSeries(i, basePath, sim.Results);
+
+                OutputTimedQueueSize(i, basePath, sim.Results);
+
+                WriteOutTimeInQ(i, basePath, sim.Results);
+            }
+
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(basePath + "FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("Putwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.PutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.PutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.PutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+
+                writer.WriteLine();
+                writer.WriteLine("NonPutwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.NonPutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.NonPutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.NonPutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.NonPutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
+
+            }
+        }
+        private void wipSimWithBreaksAndOperators()
+        {
+            var Data = new WarehouseData();
+
+            var FinalResults = new MetaResults();
+
+            //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,10)
+            };
+
+            var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
+            var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
+            var queueSizeOverTime = Data.GetQueueSizeOverTime(availability[0]);
+            var qTimes = Data.GetTimeInQueue(availability[0]);
+
+            using (var writer = new System.IO.StreamWriter(basePath + "InterArrivals_over_time_real.txt"))
+            {
+                writer.WriteLine("Time \t Interarrival Time");
+
+                foreach (var t in arrivalTimesOverTime)
+                {
+                    writer.WriteLine(t.Item1 + "\t" + t.Item2);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "ItemsInRecirc_over_time_real.txt"))
+            {
+                writer.WriteLine("Time of Day (s) \t Items in Reicirculation");
+
+                for (int i = 0; i < recircTimesOverTime.Length; i++)
+                {
+                    writer.WriteLine(i + "\t" + recircTimesOverTime[i]);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "QueueSize_over_time_real.txt"))
+            {
+                writer.WriteLine("Time of Day (s) \t Items in Queue");
+
+                for (int i = 0; i < queueSizeOverTime.Length; i++)
+                {
+                    writer.WriteLine(i + "\t" + queueSizeOverTime[i]);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "QTimes.txt"))
+            {
+                writer.WriteLine("Time in Queue");
+
+                foreach (double time in qTimes)
+                {
+                    writer.WriteLine(time);
+                }
+            }
+
+
+
+
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+
+
+
+            logger.LogDBStats("DBStats", availability.First());
+            logger.LogDBStats("DBStats", availability.First(), 600);
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+
+            for (int i = 1; i <= 20; i++)
+            {
+                var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
+                {
+                    //complete distribution
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(22,0,0)),
+
+                    //different intervals
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(6,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,30,0), new TimeSpan(7,0,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(9,0,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(13,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,30,0), new TimeSpan(15,30,0)),
+                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,30,0), new TimeSpan(22,0,0)),
+
+                    //hourly intervals
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(7,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(8,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(8,0,0), new TimeSpan(9,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(10,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(10,0,0), new TimeSpan(11,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(11,0,0), new TimeSpan(12,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(12,0,0), new TimeSpan(13,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,0,0), new TimeSpan(14,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(14,0,0), new TimeSpan(15,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,0,0), new TimeSpan(16,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(16,0,0), new TimeSpan(17,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(17,0,0), new TimeSpan(18,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(18,0,0), new TimeSpan(19,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(19,0,0), new TimeSpan(20,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(20,0,0), new TimeSpan(21,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(21,0,0), new TimeSpan(22,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(22,0,0), new TimeSpan(23,0,0)),
+                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(23,0,0), new TimeSpan(24,0,0)),
+                };
+
+                var breakTimes = Data.FindBreaks(availability[0], 600);
+
+                var sim = SimulationFactory.WIPSimWithBreaksAndOperators(availability, 30, 360, 64800, 150, 1, logger, intervals, 600, breakTimes, 2);
+
+                sim.Run();
+
+                logger.PauseLogging = false;
+
+                logger.LogResults(sim.Results, "Results_" + i, 3 * 64800);
+
+                logger.PauseLogging = true;
+
+                FinalResults.AddSimResults(sim.Results);
+
+                var t = sim.Results.CalcNumOut();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+
+                OutputTimeSeries(i, basePath, sim.Results);
+
+                WriteOutTimeInQ(i, basePath, sim.Results);
+            }
+
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(basePath + "FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("Putwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.PutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.PutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.PutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+
+                writer.WriteLine();
+                writer.WriteLine("NonPutwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.NonPutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.NonPutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.NonPutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.NonPutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
+
+            }
+        }
+
+        private void wipSimWithBreaks()
+        {
+            var Data = new WarehouseData();
+
+            var FinalResults = new MetaResults();
+
+            //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,10)
+            };
+
+            var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
+            var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
+            var queueSizeOverTime = Data.GetQueueSizeOverTime(availability[0]);
+            var qTimes = Data.GetTimeInQueue(availability[0]);
+
+            using (var writer = new System.IO.StreamWriter(basePath + "InterArrivals_over_time_real.txt"))
+            {
+                writer.WriteLine("Time \t Interarrival Time");
+
+                foreach (var t in arrivalTimesOverTime)
+                {
+                    writer.WriteLine(t.Item1 + "\t" + t.Item2);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "ItemsInRecirc_over_time_real.txt"))
+            {
+                writer.WriteLine("Time of Day (s) \t Items in Reicirculation");
+
+                for (int i = 0; i < recircTimesOverTime.Length; i++)
+                {
+                    writer.WriteLine(i + "\t" + recircTimesOverTime[i]);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "QueueSize_over_time_real.txt"))
+            {
+                writer.WriteLine("Time of Day (s) \t Items in Queue");
+
+                for (int i = 0; i < queueSizeOverTime.Length; i++)
+                {
+                    writer.WriteLine(i + "\t" + queueSizeOverTime[i]);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "QTimes.txt"))
+            {
+                writer.WriteLine("Time in Queue");
+
+                foreach(double time in qTimes)
+                {
+                    writer.WriteLine(time);
+                }
+            }
+
+
 
 
             var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
@@ -159,6 +533,8 @@ namespace WarehouseSimulation
                 throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
 
                 OutputTimeSeries(i, basePath, sim.Results);
+
+                WriteOutTimeInQ(i, basePath, sim.Results);
             }
 
 
@@ -209,6 +585,7 @@ namespace WarehouseSimulation
 
             }
         }
+        
         private void wipSim()
         {
             var Data = new WarehouseData();
@@ -371,6 +748,34 @@ namespace WarehouseSimulation
 
             }
             
+        }
+        private void WriteOutTimeInQ(int index, string basePath, SimulationResults results)
+        {
+            using (var writer = new System.IO.StreamWriter(basePath + "Time_in_Q_sim_" + index + ".txt"))
+            {
+                var TimeInQ = results.OutputTimeInQueue();
+
+                writer.WriteLine("Time in Queue");
+
+                foreach (int t in TimeInQ)
+                {
+                    writer.WriteLine(t);
+                }
+            }
+        }
+        private void OutputTimedQueueSize(int index, string basePath, SimulationResults results)
+        {
+            using (var writer = new System.IO.StreamWriter(basePath + "TimedQueueSize_over_time_sim_" + index + ".txt"))
+            {
+                var QSizeOverTime = results.OutputTimedQueueSize();
+
+                writer.WriteLine("Time \t Size");
+
+                foreach (KeyValuePair<int, int> p in QSizeOverTime)
+                {
+                    writer.WriteLine(p.Key + "\t" + p.Value);
+                }
+            }
         }
         private void OutputTimeSeries(int index, string basePath, SimulationResults results)
         {

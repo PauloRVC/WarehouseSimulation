@@ -12,11 +12,11 @@ namespace SimulationObjects.SimBlocks
 {
     public class PutwallWithPPHSchedule : Putwall
     {
-        private Dictionary<int, int> PPHSchedule;
+        protected Dictionary<int, int> PPHSchedule;
 
-        private List<IEntity> Queue = new List<IEntity>();
+        protected List<IEntity> Queue = new List<IEntity>();
 
-        public int QueueSize { get; private set; }
+        public int QueueSize { get; protected set; }
 
         
 
@@ -79,7 +79,7 @@ namespace SimulationObjects.SimBlocks
 
             return NextEvent;
         }
-        private void DeQueue(IEntity entity)
+        protected void DeQueue(IEntity entity)
         {
             Queue.Remove(entity);
         }

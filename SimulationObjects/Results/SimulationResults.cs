@@ -33,6 +33,7 @@ namespace SimulationObjects.Results
         private List<Tuple<int, int>> InterarrivalTimes = new List<Tuple<int, int>>();
         private int[] ItemsInRecirc;
         private Dictionary<int, int> QueueSizeOverTime = new Dictionary<int, int>();
+        private Dictionary<int, int> TimedQueueSizeOverTime = new Dictionary<int, int>();
 
         private int EndTime;
 
@@ -148,6 +149,17 @@ namespace SimulationObjects.Results
             else
             {
                 QueueSizeOverTime.Add(time, queueSize);
+            }
+        }
+        public virtual void ReportTimedQueueSize(int time, int queueSize)
+        {
+            if (TimedQueueSizeOverTime.ContainsKey(time))
+            {
+                TimedQueueSizeOverTime[time] = queueSize;
+            }
+            else
+            {
+                TimedQueueSizeOverTime.Add(time, queueSize);
             }
         }
 
@@ -286,6 +298,13 @@ namespace SimulationObjects.Results
         {
             return QueueSizeOverTime;
         }
-
+        public List<int> OutputTimeInQueue()
+        {
+            return TimeInQueue.Values.ToList();
+        }
+        public Dictionary<int, int> OutputTimedQueueSize()
+        {
+            return TimedQueueSizeOverTime;
+        }
     }
 }

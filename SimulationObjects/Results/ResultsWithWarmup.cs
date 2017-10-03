@@ -24,7 +24,9 @@ namespace SimulationObjects.Results
         }
         public override void ReportDisposal(IEntity entity, int disposalTime)
         {
-            if (disposalTime >= CollectionStart & base.ArrivalTimes.Keys.Contains(entity))
+            if (disposalTime >= CollectionStart
+                )
+                //& base.ArrivalTimes.Keys.Contains(entity))
                 base.ReportDisposal(entity, disposalTime);
         }
         public override void ReportProcessRealization(IEntity entity,
@@ -55,6 +57,11 @@ namespace SimulationObjects.Results
         {
             if (time >= CollectionStart)
                 base.ReportQueueSize(time, queueSize);
+        }
+        public override void ReportTimedQueueSize(int time, int queueSize)
+        {
+            if (time >= CollectionStart)
+                base.ReportTimedQueueSize(time, queueSize);
         }
     }
 }

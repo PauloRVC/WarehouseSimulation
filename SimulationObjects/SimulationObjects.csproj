@@ -105,6 +105,8 @@
     <Compile Include="Distributions\RealDistributionBuilder.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithOperatorSchedule.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHSchedule.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHScheduleAndOperators.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHScheduleAndTimeInQ.cs" />
     <Compile Include="SimBlocks\SimBlock.cs" />
     <Compile Include="Simulation.cs" />
     <Compile Include="SimulationFactory.cs" />
