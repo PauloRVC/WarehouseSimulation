@@ -67,6 +67,34 @@ namespace Infrastructure
                                     sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
             AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
         }
+        public SystemStats(DateTime day, double anomolyLimit, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var data = new WarehouseData();
+
+            ArrivalCount = CountArrivals(data.FirstArrivals(data.Scanner901, day).
+                Where(x => x.Timestamp.TimeOfDay >= interval.Item1 & 
+                    x.Timestamp.TimeOfDay <= interval.Item2).ToList(), data);
+
+            ExitCount = data.GetNPuts(day, interval);
+
+            AvgTimeInSystem = CalcAvgTimeInSystem(data, day, interval);
+            AvgTimeInProcess = CalcAvgTimeInProcess(data, day, interval);
+            AvgTimeInQueue = CalcAvgTimeInQueue(data, day, interval);
+
+            var recircGroups = data.GetRecircGroups(day, interval);
+
+            var putWallRecircGroups = recircGroups.Where(x => x.Item2.Select(y => y.Item1).Contains(data.P06.LocationID));
+            var nonPutwallRecircGroups = recircGroups.Where(x => !x.Item2.Select(y => y.Item1).Contains(data.P06.LocationID));
+
+            AvgNumTimesRecirc = new Dictionary<ProcessType, double>();
+            AvgNumTimesRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x => Math.Max(0, x.Item2.Where(y => y.Item1 == data.P06.LocationID).Count())).Average());
+            AvgNumTimesRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => Math.Max(0, x.Item2.Count)).Average());
+
+            AvgTimeRecirc = new Dictionary<ProcessType, double>();
+            AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
+                                    sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+            AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+        }
         private double sumDateDiffs(List<DateTime> times)
         {
             double sum = 0;
@@ -106,6 +134,16 @@ namespace Infrastructure
             return putTimes.Where(x => arrivals.Select(y => y.BatchID).Contains(x.Item1)).
                             Select(x => x.Item2.Subtract(arrivals.Where(y => y.BatchID == x.Item1).FirstOrDefault().Timestamp).TotalSeconds).Average();
         }
+        private double CalcAvgTimeInSystem(WarehouseData data, DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var arrivals = data.FirstArrivals(data.Scanner901, day).Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                    x.Timestamp.TimeOfDay <= interval.Item2);
+
+            var putTimes = data.LastPutTimes(day, arrivals.Select(x => x.BatchID).Distinct().ToList(), interval);
+
+            return putTimes.Where(x => arrivals.Select(y => y.BatchID).Contains(x.Item1)).
+                            Select(x => x.Item2.Subtract(arrivals.Where(y => y.BatchID == x.Item1).FirstOrDefault().Timestamp).TotalSeconds).Average();
+        }
         private double CalcAvgTimeInProcess(WarehouseData data, DateTime day)
         {
             //Get the last batchscan at 901
@@ -116,6 +154,26 @@ namespace Infrastructure
 
             //Get the time the last item in the batch was put
             var lastPutTimes = data.LastPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList());
+
+            //FIX THIS GARBAGE WHEN YOU HAVE TIME
+            var validBatches = firstPutTimes.Select(x => x.Item1).Where(x => lastPutTimes.Select(y => y.Item1).Contains(x));
+
+            var times = validBatches.Select(x => lastPutTimes.Where(y => y.Item1 == x).
+                                                FirstOrDefault().Item2.Subtract(firstPutTimes.Where(z => z.Item1 == x).
+                                                FirstOrDefault().Item2).TotalSeconds);
+            return times.Average();
+        }
+        private double CalcAvgTimeInProcess(WarehouseData data, DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            //Get the last batchscan at 901
+            var todaysArrivals = data.LastArrivals(data.Scanner901, day).Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                    x.Timestamp.TimeOfDay <= interval.Item2);
+
+            //Get the time the first item in batch was put
+            var firstPutTimes = data.FirstPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList(), interval);
+
+            //Get the time the last item in the batch was put
+            var lastPutTimes = data.LastPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList(), interval);
 
             //FIX THIS GARBAGE WHEN YOU HAVE TIME
             var validBatches = firstPutTimes.Select(x => x.Item1).Where(x => lastPutTimes.Select(y => y.Item1).Contains(x));
@@ -136,6 +194,18 @@ namespace Infrastructure
             return firstPutTimes.Where(x => lastArrivals.Select(y => y.BatchID).Contains(x.Item1)).
                                         Select(x => x.Item2.Subtract(lastArrivals.Where(y => y.BatchID == x.Item1).FirstOrDefault().Timestamp).TotalSeconds).Average();
         }
-        
+        private double CalcAvgTimeInQueue(WarehouseData data, DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            //Get the last batchscan at 901
+            var lastArrivals = data.LastArrivals(data.Scanner901, day).Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                    x.Timestamp.TimeOfDay <= interval.Item2); 
+
+            //Get the time the first item in batch was put
+            var firstPutTimes = data.FirstPutTimes(day, lastArrivals.Select(x => x.BatchID).ToList(), interval);
+
+            return firstPutTimes.Where(x => lastArrivals.Select(y => y.BatchID).Contains(x.Item1)).
+                                        Select(x => x.Item2.Subtract(lastArrivals.Where(y => y.BatchID == x.Item1).FirstOrDefault().Timestamp).TotalSeconds).Average();
+        }
+
     }
 }

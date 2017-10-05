@@ -1,4 +1,5 @@
-﻿using SimulationObjects.Entities;
+﻿using Infrastructure;
+using SimulationObjects.Entities;
 using SimulationObjects.Resources;
 using SimulationObjects.SimBlocks;
 using System;
@@ -12,6 +13,8 @@ namespace SimulationObjects.Results
     public class ResultsWithWarmup : SimulationResults
     {
         private int CollectionStart;
+
+        
 
         public ResultsWithWarmup(int collectionStart, int endTime): base(endTime)
         {
@@ -62,6 +65,18 @@ namespace SimulationObjects.Results
         {
             if (time >= CollectionStart)
                 base.ReportTimedQueueSize(time, queueSize);
+        }
+
+        public Dictionary<ProcessType, int> CalcOfDayOut()
+        {
+            var results = new Dictionary<ProcessType, int>();
+
+            foreach (ProcessType p in DisposalTimes.Keys.Select(x => x.ProcessType).Distinct())
+            {
+                results.Add(p, DisposalTimes.Keys.Where(x => x.ProcessType == p & ArrivalTimes.ContainsKey(x)).Count());
+            }
+
+            return results;
         }
     }
 }

@@ -2,6 +2,7 @@
 using SimulationObjects.Entities;
 using SimulationObjects.Events;
 using SimulationObjects.Resources;
+using SimulationObjects.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,14 @@ namespace SimulationObjects.SimBlocks
         protected IDistribution<int> QTimeDist;
         private List<IEntity> TimedQueue = new List<IEntity>();
         private List<IEntity> AllQueuedBatches = new List<IEntity>();
-
+        private SimulationResults Results;
+        public Dictionary<int, int> CurrentCapacity
+        {
+            get
+            {
+                return PPHSchedule;
+            }
+        }
 
         public PutwallWithPPHScheduleAndTimeInQ(int queueSize,
                                                 Dictionary<int, int> pPHSchedule,
@@ -25,7 +33,8 @@ namespace SimulationObjects.SimBlocks
                                                 IDistribution<int> recircTimeDist,
                                                 Simulation simulation,
                                                 IDestinationBlock nextDestination,
-                                                IDistribution<int> qTimeDist) : base(queueSize, 
+                                                IDistribution<int> qTimeDist,
+                                                SimulationResults results) : base(queueSize, 
                                                                                         pPHSchedule, 
                                                                                         operators, 
                                                                                         processTimeDist, 
@@ -34,6 +43,8 @@ namespace SimulationObjects.SimBlocks
                                                                                         nextDestination)
         {
             QTimeDist = qTimeDist;
+            Results = results;
+            Results.LeftOverCapacity = PPHSchedule;
         }
         public override IEvent GetNextEvent(IEntity batch)
         {
@@ -110,5 +121,6 @@ namespace SimulationObjects.SimBlocks
         {
             //do nothing
         }
+        
     }
 }

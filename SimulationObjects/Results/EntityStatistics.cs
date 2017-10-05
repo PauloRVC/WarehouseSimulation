@@ -16,14 +16,14 @@ namespace SimulationObjects.Results
         public Statistic TimeInQueue { get; private set; } = new Statistic(new List<double>());
         public Statistic NumberCreated { get; private set; } = new Statistic(new List<double>());
         public Statistic NumberDisposed { get; private set; } = new Statistic(new List<double>());
-        private ProcessType EntityType;
+        protected ProcessType EntityType;
 
         public EntityStatistics(ProcessType entityType)
         {
             EntityType = entityType;
         }
         
-        public void AddObservations(ISimResults simResults)
+        public virtual void AddObservations(ISimResults simResults)
         {
             TimeInSystem.AddObservation(simResults.CalcEntityTimeInSystemStats()[EntityType].Item1);
             TimeInProcess.AddObservation(simResults.CalcEntityTimeInProcessStats()[EntityType].Item1);

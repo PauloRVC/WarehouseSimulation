@@ -20,7 +20,7 @@ namespace SimulationObjects.Results
         //      recirculation time
 
         protected Dictionary<IEntity, int> ArrivalTimes = new Dictionary<IEntity, int>();
-        private Dictionary<IEntity, int> DisposalTimes = new Dictionary<IEntity, int>();
+        protected Dictionary<IEntity, int> DisposalTimes = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimeInProcess = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimeInRecirculation = new Dictionary<IEntity, int>();
         private Dictionary<IEntity, int> TimesRecirculated = new Dictionary<IEntity, int>();
@@ -34,6 +34,8 @@ namespace SimulationObjects.Results
         private int[] ItemsInRecirc;
         private Dictionary<int, int> QueueSizeOverTime = new Dictionary<int, int>();
         private Dictionary<int, int> TimedQueueSizeOverTime = new Dictionary<int, int>();
+
+        public Dictionary<int, int> LeftOverCapacity { get; set; }
 
         private int EndTime;
 
@@ -162,9 +164,6 @@ namespace SimulationObjects.Results
                 TimedQueueSizeOverTime.Add(time, queueSize);
             }
         }
-
-
-
 
 
         public Dictionary<ProcessType, Tuple<double, double>> CalcEntityTimeInSystemStats()
