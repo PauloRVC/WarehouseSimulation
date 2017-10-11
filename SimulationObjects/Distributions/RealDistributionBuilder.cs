@@ -267,8 +267,7 @@ namespace SimulationObjects.Distributions
 
             return destinationDist;
         }
-
-        //Get rid of this
+        
         public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays)
         {
             var pTimeList = new List<List<int>>();
@@ -283,28 +282,18 @@ namespace SimulationObjects.Distributions
                 var todaysArrivals = data.LastArrivals(scanner901, day);
 
                 //Get the time the first item in batch was put
-                var firstPutTimes = data.FirstPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList());
+                var firstPutTimesDict = data.FirstPutTimesDict(day, todaysArrivals.Select(x => x.BatchID).ToList());
 
                 //Get the time the last item in the batch was put
-                var lastPutTimes = data.LastPutTimes(day, todaysArrivals.Select(x => x.BatchID).ToList());
+                var lastPutTimesDict = data.LastPutTimesDict(day, todaysArrivals.Select(x => x.BatchID).ToList());
 
-                //FIX THIS GARBAGE WHEN YOU HAVE TIME
-                var validBatches = firstPutTimes.Select(x => x.Item1).Where(x => lastPutTimes.Select(y => y.Item1).Contains(x));
+                //Get the batches that exist in both
+                var validBatches = firstPutTimesDict.Keys.Intersect(lastPutTimesDict.Keys);
 
-                var times = validBatches.Select(x => (int)lastPutTimes.Where(y => y.Item1 == x).
-                                                    FirstOrDefault().Item2.Subtract(firstPutTimes.Where(z => z.Item1 == x).
-                                                    FirstOrDefault().Item2).TotalSeconds).ToList();
+                var times = validBatches.Select(x => (int)lastPutTimesDict[x].Subtract(firstPutTimesDict[x]).TotalSeconds).ToList();
 
-                //todaysArrivals = todaysArrivals.Where(y => lastPutTimes.Select(x => x.Item1).Contains(y.BatchID)).ToList();
-
-                //var timePairs = todaysArrivals.Select(x => new { arrivalTime = x.Timestamp, lastPutTime = lastPutTimes.Where(y => y.Item1 == x.BatchID).First().Item2 });
-
-                //var processTimes = timePairs.Select(x => (int)x.lastPutTime.Subtract(x.arrivalTime).TotalSeconds).ToList();
-
-                //pTimeList.Add(processTimes);
                 pTimeList.Add(times);
 
-                //Logger.LogDistribution("ProcessTimeDist" + j, processTimes);
                 Logger.LogDistribution("ProcessTimeDist" + j, times);
 
                 j++;
@@ -315,7 +304,7 @@ namespace SimulationObjects.Distributions
             if (allObservations.Any(x => x < 0))
             {
                 int failCount = allObservations.Where(x => x < 0).Count();
-                if(failCount == 1)
+                if (failCount == 1)
                 {
                     allObservations.Remove(allObservations.Where(x => x < 0).First());
                 }
@@ -324,7 +313,7 @@ namespace SimulationObjects.Distributions
                     throw new InvalidOperationException();
                 }
             }
-                
+
 
             int obsCount = allObservations.Count();
 
@@ -335,7 +324,7 @@ namespace SimulationObjects.Distributions
                 var sum = probs.Select(x => x.Item1).Sum();
                 throw new InvalidOperationException();
             }
-                
+
 
             var processTimeDist = new EmpiricalDist(probs);
 

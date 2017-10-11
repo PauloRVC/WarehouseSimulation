@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Distributions\NewDistBuilder.cs" />
     <Compile Include="Entities\IEntity.cs" />
     <Compile Include="Events\Arrival.cs" />
     <Compile Include="Events\EndQueueEvent.cs" />

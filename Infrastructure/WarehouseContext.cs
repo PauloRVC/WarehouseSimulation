@@ -119,6 +119,17 @@ namespace Infrastructure
                 return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderBy(y => y.PutTimestamp).First().PutTimestamp)).ToList();
             }
         }
+        public Dictionary<int, DateTime> FirstPutTimesDict(DateTime day, List<int> batchIDs)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID));
+
+                return puts.GroupBy(x => x.Order.BatchID).ToDictionary(x => x.Key, x => x.OrderBy(y => y.PutTimestamp).First().PutTimestamp.Value);
+            }
+        }
         public Dictionary<int, DateTime> FirstPutTimesDict(DateTime day, List<int> batchIDs, Tuple<TimeSpan, TimeSpan> interval)
         {
             using (var db = new WarehouseContext())
@@ -157,6 +168,18 @@ namespace Infrastructure
 
 
                 return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+            }
+        }
+        public Dictionary<int, DateTime> LastPutTimesDict(DateTime day, List<int> batchIDs)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID));
+
+
+                return puts.GroupBy(x => x.Order.BatchID).ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp.Value);
             }
         }
         public Dictionary<int, DateTime> LastPutTimesDict(DateTime day, List<int> batchIDs, Tuple<TimeSpan, TimeSpan> interval)
