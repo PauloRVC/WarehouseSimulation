@@ -38,6 +38,16 @@ namespace SimulationObjects
             
             EventQueue = new List<IEvent>() { firstArrival };
         }
+        public void Initialize(IArrivalBlock arrivalBlock, IEvent firstArrival, List<IEvent> eventQueue)
+        {
+            ArrivalBlock = arrivalBlock;
+
+            EventQueue = eventQueue;
+
+            EventQueue.Add(firstArrival);
+
+            EventQueue = EventQueue.OrderBy(x => x.Time).ToList();
+        }
         public SimulationResults Run()
         {
 

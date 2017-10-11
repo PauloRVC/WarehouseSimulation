@@ -46,6 +46,28 @@ namespace SimulationObjects.SimBlocks
             Results = results;
             Results.LeftOverCapacity = PPHSchedule;
         }
+
+        public List<IEvent> InitializeQueue(int initialNumberInQueue)
+        {
+            var deQueueEvents = new List<IEvent>();
+
+            for(int i = 1; i <= initialNumberInQueue; i++)
+            {
+                var batch = new Batch(this);
+
+                int time = 0;
+
+                var newEvent = new EndQueueEvent(DeQueue, batch, time);
+
+                Queue.Add(batch);
+
+                deQueueEvents.Add(newEvent);
+
+                AllQueuedBatches.Add(batch);
+            }
+
+            return deQueueEvents;
+        }
         public override IEvent GetNextEvent(IEntity batch)
         {
             IEvent NextEvent;

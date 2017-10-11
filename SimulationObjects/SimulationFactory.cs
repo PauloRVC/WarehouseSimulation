@@ -19,6 +19,102 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static Simulation SimWithFullQ(List<DateTime> selectedDays,
+                                                            int x,
+                                                            int startMin,
+                                                            int endTime,
+                                                            int queueSize,
+                                                            ILogger logger,
+                                                            List<Tuple<TimeSpan, TimeSpan>> intervals,
+                                                            int arrivalAnomolyLimit,
+                                                            List<Tuple<DateTime, DateTime>> breaks,
+                                                            Tuple<TimeSpan, TimeSpan> interval,
+                                                            int numInQueue)
+        {
+            int minsInShift = endTime / 60;
+            var results = new SimulationResults(endTime);
+
+            var breakTimes = new List<Tuple<int, int>>();
+
+            foreach (var brk in breaks)
+            {
+                if (brk.Item1.TimeOfDay.TotalMinutes > startMin)
+                {
+                    
+                        int t1 = ((int)brk.Item1.TimeOfDay.TotalSeconds - startMin * 60);
+                        int t2 = (int)brk.Item2.TimeOfDay.TotalSeconds - startMin * 60;
+
+                        breakTimes.Add(new Tuple<int, int>(t1, t2));
+                }
+            }
+
+            Simulation simulation = new Simulation(results, endTime);
+
+            var Operators = new List<Processor>();
+
+            var data = new WarehouseData();
+
+
+            Operators.Add(new Processor());
+
+            RealDistributionBuilder distBuilder = new RealDistributionBuilder(simulation);
+
+            distBuilder.Logger = logger;
+
+            var ppxMinutes = distBuilder.GetPutsPerX(selectedDays.First(), x);
+
+            var ppxSchedule = new Dictionary<int, int>();
+
+            for (int newX = 0; newX <= minsInShift; newX += x)
+            {
+                int newStartSecond = newX * 60;
+                ppxSchedule.Add(newStartSecond, ppxMinutes[(((newX % minsInShift) + startMin) / x)]);
+            }
+
+            logger.LogPutsPerHour("PPX_Schedule_" + x, ppxSchedule);
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+
+            PutwallWithPPHScheduleAndTimeInQ P06 = new PutwallWithPPHScheduleAndTimeInQ(queueSize,
+                                                               ppxSchedule,
+                                                               Operators,
+                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildRecircTimeDist(selectedDays, 300, interval),
+                                                               simulation,
+                                                                disposalBlock,
+                                                                distBuilder.BuildTimeInQueueDistribution(selectedDays, int.MaxValue, interval),
+                                                                results);
+            Location P06L = data.P06;
+
+            var deQueueEvents = P06.InitializeQueue(numInQueue);
+
+            Dictionary<int, IDestinationBlock> locationDict = new Dictionary<int, IDestinationBlock>()
+            {
+                { P06L.LocationID, P06 }
+            };
+
+
+            var arrivalDists = distBuilder.BuildArrivalDist(selectedDays, arrivalAnomolyLimit, intervals);
+
+            var newArrivalDists = new Dictionary<Tuple<int, int>, IDistribution<int>>();
+
+            for (int i = 0; i < intervals.Count; i++)
+            {
+                var t = new Tuple<int, int>((int)(intervals[i].Item1.TotalMinutes - startMin) * 60, (int)(intervals[i].Item2.TotalMinutes - startMin) * 60);
+                newArrivalDists.Add(t, arrivalDists[i]);
+            }
+
+
+
+            var ArrivalBlock = new InterarrivalBlockWithBreaks(newArrivalDists, distBuilder.BuildDestinationDist(selectedDays, locationDict, disposalBlock), simulation, breakTimes);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, firstArrival, deQueueEvents);
+
+            return simulation;
+        }
         public static Simulation WIPSimWithBreaksAndQTime(List<DateTime> selectedDays,
                                                             int x,
                                                             int startMin,
