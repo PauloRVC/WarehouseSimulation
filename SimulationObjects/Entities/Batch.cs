@@ -15,7 +15,8 @@ namespace SimulationObjects.Entities
         public Batch(IDestinationBlock destination)
         {
             Destination = destination;
-            if (Destination.GetType() == typeof(Putwall) | Destination.GetType().IsSubclassOf(typeof(Putwall))) 
+            if (Destination.GetType() == typeof(Putwall) | Destination.GetType().IsSubclassOf(typeof(Putwall)) |
+                Destination.GetType() == typeof(PutwallWithIntervalDistributions) | Destination.GetType().IsSubclassOf(typeof(PutwallWithIntervalDistributions) ))
             {
                 ProcessType = ProcessType.Putwall;
             }
@@ -23,6 +24,11 @@ namespace SimulationObjects.Entities
             {
                 ProcessType = ProcessType.NonPutwall;
             }
+        }
+        public Batch(IDestinationBlock destination, ProcessType processType)
+        {
+            Destination = destination;
+            ProcessType = processType;
         }
     }
 }

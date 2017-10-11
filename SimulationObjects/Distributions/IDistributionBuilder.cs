@@ -12,7 +12,7 @@ namespace SimulationObjects.Distributions
     public interface IDistributionBuilder
     {
         ILogger Logger { get; set; }
-        IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays, Process process);
+        IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays);
         IDistribution<int> BuildArrivalDist(List<DateTime> selectedDays);
         IDistribution<int> BuildRecircTimeDist(List<DateTime> selectedDays);
         IDistribution<IDestinationBlock> BuildDestinationDist(List<DateTime> selectedDays, Dictionary<int, IDestinationBlock> processBlocks, IDestinationBlock nextDestination);

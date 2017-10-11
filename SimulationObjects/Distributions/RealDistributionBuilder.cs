@@ -183,8 +183,8 @@ namespace SimulationObjects.Distributions
         }
 
         public IDistribution<IDestinationBlock> BuildDestinationDist(List<DateTime> selectedDays, 
-                                                            Dictionary<int, IDestinationBlock> processBlocks, 
-                                                            IDestinationBlock nextDestination)
+                                                                     Dictionary<int, IDestinationBlock> processBlocks, 
+                                                                     IDestinationBlock nextDestination)
         {
             var destinationList = new List<List<Location>>();
 
@@ -224,8 +224,52 @@ namespace SimulationObjects.Distributions
 
             return destinationDist;
         }
+        public IDistribution<IDestinationBlock> BuildDestinationDist(List<DateTime> selectedDays,
+                                                                     Dictionary<int, IDestinationBlock> processBlocks,
+                                                                     IDestinationBlock nextDestination,
+                                                                     Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var destinationList = new List<List<Location>>();
 
-        public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays, Process process)
+            var scanner901 = data.Scanner901;
+
+            int j = 1;
+            foreach (DateTime day in selectedDays)
+            {
+                var todaysArrivals = data.FirstArrivals(scanner901, day, interval).Select(x => x.IntendedDestination).ToList();
+
+                destinationList.Add(todaysArrivals);
+
+                Logger.LogDistribution("DestinationDist" + j, todaysArrivals);
+
+                j++;
+            }
+
+            var allObservations = destinationList.SelectMany(x => x);
+
+            int obsCount = allObservations.Count();
+
+            var distinctDests = allObservations.Distinct();
+            foreach (Location l in distinctDests)
+            {
+                if (!processBlocks.ContainsKey(l.LocationID))
+                {
+                    processBlocks.Add(l.LocationID, new NonPutwallLane(Simulation, nextDestination));
+                }
+            }
+
+            var probs = allObservations.GroupBy(x => x.LocationID).Select(x => new Tuple<double, IDestinationBlock>((double)x.Count() / obsCount, processBlocks[x.Key])).ToList();
+
+            if (probs.Select(x => x.Item1).Sum() < 0.99)
+                throw new InvalidOperationException();
+
+            var destinationDist = new DestinationDist(probs);
+
+            return destinationDist;
+        }
+
+        //Get rid of this
+        public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays)
         {
             var pTimeList = new List<List<int>>();
 
@@ -292,6 +336,68 @@ namespace SimulationObjects.Distributions
                 throw new InvalidOperationException();
             }
                 
+
+            var processTimeDist = new EmpiricalDist(probs);
+
+            return processTimeDist;
+        }
+        public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays, int anomolyLimit, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var pTimeList = new List<List<int>>();
+
+            var scanner901 = data.Scanner901;
+
+            int j = 1;
+
+            foreach (DateTime day in selectedDays)
+            {
+                //Get the last batchscan at 901
+                var todaysArrivals = data.LastArrivals(scanner901, day);
+
+                //Get the time the first item in batch was put
+                var firstPutTimesDict = data.FirstPutTimesDict(day, todaysArrivals.Select(x => x.BatchID).ToList(), interval);
+
+                //Get the time the last item in the batch was put
+                var lastPutTimesDict = data.LastPutTimesDict(day, todaysArrivals.Select(x => x.BatchID).ToList(), interval);
+                
+                //Get the batches that exist in both
+                var validBatches = firstPutTimesDict.Keys.Intersect(lastPutTimesDict.Keys);
+
+                var times = validBatches.Select(x => (int)lastPutTimesDict[x].Subtract(firstPutTimesDict[x]).TotalSeconds).ToList();
+
+                pTimeList.Add(times);
+
+                Logger.LogDistribution("ProcessTimeDist" + j, times);
+
+                j++;
+            }
+
+            var allObservations = pTimeList.SelectMany(x => x).Where(x => x< anomolyLimit).ToList();
+
+            if (allObservations.Any(x => x < 0))
+            {
+                int failCount = allObservations.Where(x => x < 0).Count();
+                if (failCount == 1)
+                {
+                    allObservations.Remove(allObservations.Where(x => x < 0).First());
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+
+
+            int obsCount = allObservations.Count();
+
+            var probs = allObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / obsCount, x.Key)).ToList();
+
+            if (probs.Select(x => x.Item1).Sum() < 0.99)
+            {
+                var sum = probs.Select(x => x.Item1).Sum();
+                throw new InvalidOperationException();
+            }
+
 
             var processTimeDist = new EmpiricalDist(probs);
 

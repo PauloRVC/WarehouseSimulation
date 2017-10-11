@@ -17,8 +17,232 @@ namespace SimulationObjects
     {
         Default
     }
+    public class FactoryParams
+    {
+        public int StartMin { get; set; }
+        public int EndMin
+        {
+            get
+            {
+                return StartMin + DayLength / 60;
+            }
+        }
+        public int DayLength { get; set; }
+        public int ArrivalAnomolyLimit { get; set; } = 600;
+        public int RecircAnomolyLimit { get; set; } = 300;
+        public int TimeInQueueAnomolyLimit { get; set; } = int.MaxValue;
+        public int ProcessTimeAnomolyLimit { get; set; } = int.MaxValue;
+        public int QueueSize { get; set; }
+        public ILogger Logger { get; set; }
+    }
+    public class DistributionSelectionParameters
+    {
+        public List<DateTime> SelectedDaysForData { get; set; }
+        public List<Tuple<TimeSpan, TimeSpan>> ArrivalDistributionBreakpoints { get; set; }
+        public List<Tuple<DateTime, DateTime>> BreakTimes { get; set; }
+        public Tuple<TimeSpan, TimeSpan> IntervalForOtherDistributions { get; set; }
+        public int CapacityIntervalSize { get; set; }
+
+    }
     public static class SimulationFactory
     {
+        public static Simulation SimWithSpecificWarmupDay(FactoryParams factoryParams, 
+                                                          DistributionSelectionParameters distParams, 
+                                                          List<Tuple<DateTime, DistributionSelectionParameters>> warmupDays)
+        {
+            int nWarmupDays = warmupDays.Count;
+            int minsInShift = factoryParams.DayLength / 60;
+            var results = new ResultsWithWarmup(factoryParams.DayLength * nWarmupDays, factoryParams.DayLength * (nWarmupDays + 1));
+
+            var breakTimes = new List<Tuple<int, int>>();
+
+            //Add warmup period breaks
+            for(int i = 0; i < nWarmupDays; i++)
+            {
+                var warmupDay = warmupDays[i];
+                
+                foreach(var brk in warmupDay.Item2.BreakTimes)
+                {
+                    if(brk.Item1.TimeOfDay.TotalMinutes > factoryParams.StartMin &
+                       brk.Item1.TimeOfDay.TotalMinutes < factoryParams.EndMin)
+                    {
+                        int t1 = ((int)brk.Item1.TimeOfDay.TotalSeconds - factoryParams.StartMin * 60);
+                        int t2 = (int)brk.Item2.TimeOfDay.TotalSeconds - factoryParams.StartMin * 60;
+                        t2 = Math.Min(t2, factoryParams.DayLength);
+
+                        t1 += factoryParams.DayLength * i;
+                        t2 += factoryParams.DayLength * i;
+
+                        breakTimes.Add(new Tuple<int, int>(t1, t2));
+                    }
+                }
+            }
+
+            //Add simulation breaks
+            foreach(var brk in distParams.BreakTimes)
+            {
+                if (brk.Item1.TimeOfDay.TotalMinutes > factoryParams.StartMin &
+                       brk.Item1.TimeOfDay.TotalMinutes < factoryParams.EndMin)
+                {
+                    int t1 = ((int)brk.Item1.TimeOfDay.TotalSeconds - factoryParams.StartMin * 60);
+                    int t2 = (int)brk.Item2.TimeOfDay.TotalSeconds - factoryParams.StartMin * 60;
+                    t2 = Math.Min(t2, factoryParams.DayLength);
+
+                    t1 += factoryParams.DayLength * nWarmupDays;
+                    t2 += factoryParams.DayLength * nWarmupDays;
+
+                    breakTimes.Add(new Tuple<int, int>(t1, t2));
+                }
+            }
+
+            Simulation simulation = new Simulation(results, factoryParams.DayLength * (nWarmupDays + 1));
+
+            var Operators = new List<Processor>();
+
+            var data = new WarehouseData();
+
+
+            Operators.Add(new Processor());
+
+            RealDistributionBuilder distBuilder = new RealDistributionBuilder(simulation);
+
+            distBuilder.Logger = factoryParams.Logger;
+
+            var ppxSchedule = new Dictionary<int, int>();
+
+            //Add ppxSchedule for warmup days
+            for(int i = 0; i < nWarmupDays; i++)
+            {
+                var warmupDay = warmupDays[i];
+
+                var warmupDistParams = warmupDay.Item2;
+
+                var ppxMinutes = distBuilder.GetPutsPerX(warmupDistParams.SelectedDaysForData.First(), warmupDistParams.CapacityIntervalSize);
+
+                factoryParams.Logger.LogPutsPerHour("PPX_Mins_" + i + "_" + warmupDistParams.CapacityIntervalSize, ppxMinutes);
+
+                for (int min = 0; min < minsInShift; min += warmupDistParams.CapacityIntervalSize)
+                {
+                    int simIntervalStart = min * 60 + factoryParams.DayLength * i;
+                    ppxSchedule.Add(simIntervalStart, ppxMinutes[((min + factoryParams.StartMin) / warmupDistParams.CapacityIntervalSize)]);
+                }
+
+                
+            }
+
+            //Add ppxSchedule for simulation
+            var ppxMinutesSim = distBuilder.GetPutsPerX(distParams.SelectedDaysForData.First(), distParams.CapacityIntervalSize);
+
+            factoryParams.Logger.LogPutsPerHour("PPX_Mins_Sim_" + distParams.CapacityIntervalSize, ppxMinutesSim);
+
+            for (int min = 0; min <= minsInShift; min += distParams.CapacityIntervalSize)
+            {
+                int simIntervalStart = min * 60 + factoryParams.DayLength * nWarmupDays;
+                ppxSchedule.Add(simIntervalStart, ppxMinutesSim[((min + factoryParams.StartMin) / distParams.CapacityIntervalSize)]);
+            }
+
+            factoryParams.Logger.LogPutsPerHour("PPX_Schedule", ppxSchedule);
+
+            var ProcessTimeDists = new Dictionary<int, IDistribution<int>>();
+            var RecircTimeDists = new Dictionary<int, IDistribution<int>>();
+            var QueueTimeDists = new Dictionary<int, IDistribution<int>>();
+            var DestinationDists = new Dictionary<int, IDistribution<IDestinationBlock>>();
+            var ArrivalDists = new Dictionary<int, IDistribution<int>>();
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+            var locationDict = new Dictionary<int, IDestinationBlock>();
+
+            IDestinationBlock P06 = new PutwallWithIntervalDistributions(ProcessTimeDists,
+                                                                         RecircTimeDists,
+                                                                         QueueTimeDists,
+                                                                         simulation,
+                                                                         disposalBlock,
+                                                                         factoryParams.QueueSize,
+                                                                         ppxSchedule,
+                                                                         results);
+            Location P06L = data.P06;
+
+            locationDict.Add(P06L.LocationID, P06);
+            
+            //Create distributions for warmup days
+            for(int i = 0; i < nWarmupDays; i++)
+            {
+                var warmupDay = new List<DateTime>() { warmupDays[i].Item1 };
+
+                var distInterval = warmupDays[i].Item2.IntervalForOtherDistributions;
+
+                //First distributions are collected in one interval
+                var processTimeDist = distBuilder.BuildProcessTimeDist(warmupDay, factoryParams.ProcessTimeAnomolyLimit, distInterval);
+                var recircTimeDist = distBuilder.BuildRecircTimeDist(warmupDay, factoryParams.RecircAnomolyLimit, distInterval);
+                var queueTimeDist = distBuilder.BuildTimeInQueueDistribution(warmupDay, factoryParams.TimeInQueueAnomolyLimit, distInterval);
+                var destinationDist = distBuilder.BuildDestinationDist(warmupDay, locationDict, disposalBlock, distInterval);
+
+                ProcessTimeDists.Add(i * factoryParams.DayLength, processTimeDist);
+                RecircTimeDists.Add(i * factoryParams.DayLength, recircTimeDist);
+                QueueTimeDists.Add(i * factoryParams.DayLength, queueTimeDist);
+                DestinationDists.Add(i * factoryParams.DayLength, destinationDist);
+
+                //Arrival dist collected over several intervals
+                var bps = warmupDays[i].Item2.ArrivalDistributionBreakpoints;
+
+                var arrivalDists = distBuilder.BuildArrivalDist(warmupDay, factoryParams.ArrivalAnomolyLimit, bps);
+                
+                for(int j = 0; j < arrivalDists.Count; j++)
+                {
+                    var arrivalDist = arrivalDists[j];
+
+                    int distStart = ((int)bps[j].Item1.TotalMinutes - factoryParams.StartMin) * 60 + factoryParams.DayLength * i;
+
+                    ArrivalDists.Add(distStart, arrivalDist);
+                }
+            }
+
+            //Create distributions for sim
+            //First distributions are collected in one interval
+            var ptDist = distBuilder.
+                         BuildProcessTimeDist(distParams.SelectedDaysForData, 
+                                              factoryParams.ProcessTimeAnomolyLimit, 
+                                              distParams.IntervalForOtherDistributions);
+            var rctDist = distBuilder.
+                          BuildRecircTimeDist(distParams.SelectedDaysForData, 
+                                              factoryParams.RecircAnomolyLimit, 
+                                              distParams.IntervalForOtherDistributions);
+            var qtDist = distBuilder.
+                         BuildTimeInQueueDistribution(distParams.SelectedDaysForData, 
+                                                      factoryParams.TimeInQueueAnomolyLimit, 
+                                                      distParams.IntervalForOtherDistributions);
+            var destDist = distBuilder.
+                           BuildDestinationDist(distParams.SelectedDaysForData, 
+                                                locationDict, 
+                                                disposalBlock, 
+                                                distParams.IntervalForOtherDistributions);
+
+            ProcessTimeDists.Add(factoryParams.DayLength * nWarmupDays, ptDist);
+            RecircTimeDists.Add(factoryParams.DayLength * nWarmupDays, rctDist);
+            QueueTimeDists.Add(factoryParams.DayLength * nWarmupDays, qtDist);
+            DestinationDists.Add(factoryParams.DayLength * nWarmupDays, destDist);
+
+            //Arrival dist collected over several intervals
+            var breakPoints = distParams.ArrivalDistributionBreakpoints;
+
+            var arvlDists = distBuilder.BuildArrivalDist(distParams.SelectedDaysForData, factoryParams.ArrivalAnomolyLimit, breakPoints);
+
+            for(int i = 0; i < arvlDists.Count; i++)
+            {
+                int distStart = ((int)breakPoints[i].Item1.TotalMinutes - factoryParams.StartMin) * 60 + factoryParams.DayLength *nWarmupDays;
+
+                ArrivalDists.Add(distStart, arvlDists[i]);
+            }
+            
+            var ArrivalBlock = new ArrivalBlockII(ArrivalDists, DestinationDists, P06, breakTimes, simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, firstArrival);
+
+            return simulation;
+        }
         public static Simulation SimWithFullQ(List<DateTime> selectedDays,
                                                             int x,
                                                             int startMin,
@@ -79,7 +303,7 @@ namespace SimulationObjects
             PutwallWithPPHScheduleAndTimeInQ P06 = new PutwallWithPPHScheduleAndTimeInQ(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300, interval),
                                                                simulation,
                                                                 disposalBlock,
@@ -185,7 +409,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHScheduleAndTimeInQ(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300, interval),
                                                                simulation,
                                                                 disposalBlock,
@@ -293,7 +517,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHScheduleAndTimeInQ(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock,
@@ -404,7 +628,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule (queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -509,7 +733,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -597,7 +821,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -682,7 +906,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -753,7 +977,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -820,7 +1044,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
                                                                ppxSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -877,7 +1101,7 @@ namespace SimulationObjects
             IDestinationBlock P06 = new PutwallWithPPHSchedule(queueSize,
                                                                pphSchedule,
                                                                Operators,
-                                                               distBuilder.BuildProcessTimeDist(selectedDays, Process.Default),
+                                                               distBuilder.BuildProcessTimeDist(selectedDays),
                                                                distBuilder.BuildRecircTimeDist(selectedDays, 300),
                                                                simulation,
                                                                 disposalBlock);
@@ -919,7 +1143,7 @@ namespace SimulationObjects
 
             IDestinationBlock P06 = new PutwallWithOperatorSchedule(operatorSchedule, 
                                                                     Operators, 
-                                                                    distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), 
+                                                                    distBuilder.BuildProcessTimeDist(selectedDays), 
                                                                     distBuilder.BuildRecircTimeDist(selectedDays), 
                                                                     simulation, 
                                                                     disposalBlock);
@@ -959,7 +1183,7 @@ namespace SimulationObjects
             IDestinationBlock disposalBlock = new DisposalBlock(simulation);
 
 
-            IDestinationBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
+            IDestinationBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
             Location P06L = data.P06;
 
             Dictionary<int, IDestinationBlock> locationDict = new Dictionary<int, IDestinationBlock>()
@@ -999,7 +1223,7 @@ namespace SimulationObjects
                 new Processor()
             };
 
-            IDestinationBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays, Process.Default), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
+            IDestinationBlock P06 = new Putwall(Operators, distBuilder.BuildProcessTimeDist(selectedDays), distBuilder.BuildRecircTimeDist(selectedDays), simulation, disposalBlock);
 
 
             List<Tuple<double, IDestinationBlock>> DestinationData = new List<Tuple<double, IDestinationBlock>>()

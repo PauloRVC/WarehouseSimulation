@@ -33,7 +33,7 @@ namespace SimulationObjects.Distributions
             return new DestinationDist(FakeDestData);
         }
 
-        public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays, Process process)
+        public IDistribution<int> BuildProcessTimeDist(List<DateTime> selectedDays)
         {
             var FakeIntData = new List<Tuple<double, int>>()
             {

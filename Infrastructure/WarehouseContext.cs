@@ -44,100 +44,168 @@ namespace Infrastructure
     }
     public class WarehouseData
     {
-        private WarehouseContext db = new WarehouseContext();
         public ILogger Logger { get; set; } = new NullLogger();
-        public Location Scanner901
+        public Location Scanner901 { get; set; }
+        public Location P06 { get; set; }
+        public WarehouseData()
         {
-            get
+            using(var DB = new WarehouseContext())
             {
-               return db.Locations.Where(x => x.ScannerIndicator == "901").First();
-            }
-        }
-        public Location P06
-        {
-            get
-            {
-                return db.Locations.Where(x => x.ScannerIndicator == "P06").First();
+                Scanner901 = DB.Locations.Where(x => x.ScannerIndicator == "901").First();
+                P06 = DB.Locations.Where(x => x.ScannerIndicator == "P06").First();
             }
         }
         public List<BatchScan> FirstArrivals(Location location, DateTime day)
         {
-            var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
+            using(var db = new WarehouseContext())
+            {
+                var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
                                                                 && x.CurrentLocation.LocationID == location.LocationID);
 
-            //Keep only the first arrival for each batch
-            return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderBy(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).
-                Include(x => x.ActualDestination).Include(x => x.CurrentLocation).Include(x => x.IntendedDestination).ToList();
+                //Keep only the first arrival for each batch
+                return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderBy(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).
+                    Include(x => x.ActualDestination).Include(x => x.CurrentLocation).Include(x => x.IntendedDestination).ToList();
+            }
+        }
+        public List<BatchScan> FirstArrivals(Location location, DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
+                                                                && x.CurrentLocation.LocationID == location.LocationID
+                                                                && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
+                                                                && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2);
+
+                //Keep only the first arrival for each batch
+                return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderBy(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).
+                    Include(x => x.ActualDestination).Include(x => x.CurrentLocation).Include(x => x.IntendedDestination).ToList();
+            }
         }
         public  List<BatchScan> LastArrivals(Location location, DateTime day)
         {
-            var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
+            using (var db = new WarehouseContext())
+            {
+                var daysBatchScans = db.BatchScans.Where(x => DbFunctions.TruncateTime(x.Timestamp) == day.Date
                                                                 && x.CurrentLocation.LocationID == location.LocationID);
 
-            //Keep only the first arrival for each batch
-            return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderByDescending(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).ToList();
+                //Keep only the first arrival for each batch
+                return daysBatchScans.GroupBy(x => x.BatchID).Select(x => x.OrderByDescending(y => y.Timestamp).FirstOrDefault()).OrderBy(x => x.Timestamp).ToList();
+            }
         }
         public List<Tuple<int, DateTime>> FirstPutTimes(DateTime day, List<int> batchIDs)
         {
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID));
 
 
-            return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderBy(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+                return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderBy(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+            }
         }
+        //Get rid of this
         public List<Tuple<int, DateTime>> FirstPutTimes(DateTime day, List<int> batchIDs, Tuple<TimeSpan, TimeSpan> interval)
         {
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID)
                                                 && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1
                                                 && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) <= interval.Item2);
 
 
-            return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderBy(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+                return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderBy(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+            }
+        }
+        public Dictionary<int, DateTime> FirstPutTimesDict(DateTime day, List<int> batchIDs, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID)
+                                                && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1
+                                                && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) <= interval.Item2);
+
+                return puts.GroupBy(x => x.Order.BatchID).ToDictionary(x => x.Key, x => x.OrderBy(y => y.PutTimestamp).First().PutTimestamp.Value);
+            }
         }
         public  List<Tuple<int, DateTime>> LastPutTimes(DateTime day, List<int> batchIDs)
         {
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue 
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID));
 
 
-            return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+                return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+            }
         }
+        //Get rid of this
         public List<Tuple<int, DateTime>> LastPutTimes(DateTime day, List<int> batchIDs, Tuple<TimeSpan, TimeSpan> interval)
         {
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID)
                                                 && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1
                                                 && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) <= interval.Item2);
 
 
-            return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+                return puts.GroupBy(x => x.Order.BatchID).ToList().Select(x => new Tuple<int, DateTime>(x.Key, (DateTime)x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp)).ToList();
+            }
+        }
+        public Dictionary<int, DateTime> LastPutTimesDict(DateTime day, List<int> batchIDs, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                && batchIDs.Contains(x.Order.BatchID)
+                                                && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1
+                                                && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) <= interval.Item2);
+
+
+                return puts.GroupBy(x => x.Order.BatchID).ToDictionary(x => x.Key, x => x.OrderByDescending(y => y.PutTimestamp).First().PutTimestamp.Value);
+            }
         }
         public int GetNPuts(DateTime day)
         {
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date);
-            return puts.GroupBy(x => x.Order.BatchID).Count();
+                return puts.GroupBy(x => x.Order.BatchID).Count();
+            }
         }
         public int GetNPuts(DateTime day, Tuple<TimeSpan, TimeSpan> interval)
         {
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
-                                                && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1 
+                                                && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1
                                                 && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) <= interval.Item2);
-            return puts.GroupBy(x => x.Order.BatchID).Count();
+                return puts.GroupBy(x => x.Order.BatchID).Count();
+            }
         }
         public  List<DateTime> GetBatchScanAvailability()
         {
-            return db.BatchScans.Select(x => DbFunctions.TruncateTime(x.Timestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
+            using (var db = new WarehouseContext())
+            {
+                return db.BatchScans.Select(x => DbFunctions.TruncateTime(x.Timestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
+            }
         }
         public  List<DateTime> GetPutTimeAvailability()
         {
-            return db.OrderItems.Where(x => x.PutTimestamp.HasValue).Select(x => DbFunctions.TruncateTime(x.PutTimestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
+            using (var db = new WarehouseContext())
+            {
+                return db.OrderItems.Where(x => x.PutTimestamp.HasValue).Select(x => DbFunctions.TruncateTime(x.PutTimestamp)).Distinct().ToList().Select(x => ((DateTime)x).Date).ToList();
+            }
         }
         public  List<DateTime> GetOverallAvailability()
         {
@@ -145,45 +213,51 @@ namespace Infrastructure
         }
         public Dictionary<int, int> GetPutsPerHour(DateTime day)
         {
-            var lastPuts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var lastPuts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date).
                                                 GroupBy(x => x.Order.BatchID).Select(x => x.OrderByDescending(y => y.PutTimestamp).FirstOrDefault()).
                                                 GroupBy(x => x.PutTimestamp.Value.Hour).
                                                 Select(x => new { hour = x.Key, count = x.Count() });
-            var pph = new Dictionary<int, int>();
+                var pph = new Dictionary<int, int>();
 
-            foreach(var a in lastPuts)
-            {
-                pph.Add(a.hour, a.count);
-            }
-
-            for(int i = 0; i < 24; i++)
-            {
-                if (!pph.ContainsKey(i))
+                foreach (var a in lastPuts)
                 {
-                    pph.Add(i, 0);
+                    pph.Add(a.hour, a.count);
                 }
+
+                for (int i = 0; i < 24; i++)
+                {
+                    if (!pph.ContainsKey(i))
+                    {
+                        pph.Add(i, 0);
+                    }
+                }
+                return pph;
             }
-            return pph;
         }
         public List<int> GetRecircTimes(DateTime day)
         {
-            var res = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+            using (var db = new WarehouseContext())
+            {
+                var res = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
                                                DbFunctions.TruncateTime(x.Timestamp) == day.Date).
                                                GroupBy(x => x.BatchID).Where(x => x.Count() > 1).
                                                Select(x => x.Select(y => y.Timestamp).OrderBy(y => y).ToList());
 
-            List<int> recircTimes = new List<int>();
+                List<int> recircTimes = new List<int>();
 
-            foreach(var group in res)
-            {
-                for(int i = 1; i < group.Count; i++)
+                foreach (var group in res)
                 {
-                    recircTimes.Add((int)group[i].Subtract(group[i-1]).TotalSeconds);
+                    for (int i = 1; i < group.Count; i++)
+                    {
+                        recircTimes.Add((int)group[i].Subtract(group[i - 1]).TotalSeconds);
+                    }
                 }
-            }
 
-            return recircTimes;
+                return recircTimes;
+            }
         }
         public Dictionary<int, int> GetPutsPerZMins(DateTime day, int z)
         {
@@ -199,27 +273,29 @@ namespace Infrastructure
                 time = time.AddMinutes(z);
                 indexLookup.Add(time, i);
             } while (time.Day == day.Day);
-
-            var intermed = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var intermed = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date).
                                                 GroupBy(x => x.Order.BatchID).Select(x => x.OrderByDescending(y => y.PutTimestamp).FirstOrDefault()).
                                                 ToList();
 
-            var lastPuts = intermed.GroupBy(x => GetTimeIndex(indexLookup, x.PutTimestamp.Value)).
-                                                Select(x => new { timeIndex = x.Key, count = x.Count() });
+                var lastPuts = intermed.GroupBy(x => GetTimeIndex(indexLookup, x.PutTimestamp.Value)).
+                                                    Select(x => new { timeIndex = x.Key, count = x.Count() });
 
-            var pph = new Dictionary<int, int>();
-            foreach (int k in indexLookup.Values)
-            {
-                pph.Add(k, 0);
+                var pph = new Dictionary<int, int>();
+                foreach (int k in indexLookup.Values)
+                {
+                    pph.Add(k, 0);
+                }
+
+                foreach (var a in lastPuts)
+                {
+                    pph[a.timeIndex] += a.count;
+                }
+
+                return pph;
             }
-
-            foreach (var a in lastPuts)
-            {
-                pph[a.timeIndex] += a.count;
-            }
-
-            return pph;
         }
         private int GetTimeIndex(Dictionary<DateTime, int> indexLookup, DateTime time)
         {
@@ -227,22 +303,27 @@ namespace Infrastructure
         }
         public List<Tuple<int, List<Tuple<int,DateTime>>>>GetRecircGroups(DateTime day)
         {
-            var dbresults = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+            using (var db = new WarehouseContext())
+            {
+                var dbresults = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
                                                DbFunctions.TruncateTime(x.Timestamp) == day.Date).
                                                GroupBy(x => x.BatchID).
                                                Select(x => new
                                                {
                                                    bid = x.Key,
-                                                   pair = x.Select(y => new { y.IntendedDestinationID, y.Timestamp}).ToList()
+                                                   pair = x.Select(y => new { y.IntendedDestinationID, y.Timestamp }).ToList()
                                                }).ToList();
 
-            return dbresults.
-                Select(x => new Tuple<int, List<Tuple<int, DateTime>>>(x.bid, x.pair.Select(y => new Tuple<int, DateTime>(y.IntendedDestinationID, y.Timestamp)).
-                ToList())).ToList();
+                return dbresults.
+                    Select(x => new Tuple<int, List<Tuple<int, DateTime>>>(x.bid, x.pair.Select(y => new Tuple<int, DateTime>(y.IntendedDestinationID, y.Timestamp)).
+                    ToList())).ToList();
+            }
         }
         public List<Tuple<int, List<Tuple<int, DateTime>>>> GetRecircGroups(DateTime day, Tuple<TimeSpan, TimeSpan> interval)
         {
-            var dbresults = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+            using (var db = new WarehouseContext())
+            {
+                var dbresults = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
                                                DbFunctions.TruncateTime(x.Timestamp) == day.Date
                                                && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
                                                && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2).
@@ -253,9 +334,10 @@ namespace Infrastructure
                                                    pair = x.Select(y => new { y.IntendedDestinationID, y.Timestamp }).ToList()
                                                }).ToList();
 
-            return dbresults.
-                Select(x => new Tuple<int, List<Tuple<int, DateTime>>>(x.bid, x.pair.Select(y => new Tuple<int, DateTime>(y.IntendedDestinationID, y.Timestamp)).
-                ToList())).ToList();
+                return dbresults.
+                    Select(x => new Tuple<int, List<Tuple<int, DateTime>>>(x.bid, x.pair.Select(y => new Tuple<int, DateTime>(y.IntendedDestinationID, y.Timestamp)).
+                    ToList())).ToList();
+            }
         }
         public List<Tuple<DateTime, int>> GetInterarrivalTimesOverTime(DateTime day)
         {
@@ -274,35 +356,38 @@ namespace Infrastructure
         }
         public int[] GetQueueSizeOverTime(DateTime day)
         {
-            var QueueSize = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
-
-            var last901 = LastArrivals(Scanner901, day);
-
-            var batchIDs = last901.Select(x => x.BatchID).ToList();
-
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
-                                                && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
-                                                && batchIDs.Contains(x.Order.BatchID)).GroupBy(x => x.Order.BatchID).ToList().
-                                                ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
-
-            foreach (var lastArrival in last901)
+            using (var db = new WarehouseContext())
             {
-                if (puts.ContainsKey(lastArrival.BatchID))
+                var QueueSize = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
+
+                var last901 = LastArrivals(Scanner901, day);
+
+                var batchIDs = last901.Select(x => x.BatchID).ToList();
+
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                    && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
+                                                    && batchIDs.Contains(x.Order.BatchID)).GroupBy(x => x.Order.BatchID).ToList().
+                                                    ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
+
+                foreach (var lastArrival in last901)
                 {
-                    var t1 = lastArrival.Timestamp;
-                    var t2 = puts[lastArrival.BatchID].Value;
-
-                    int start = (int)t1.TimeOfDay.TotalSeconds;
-                    int end = (int)t2.TimeOfDay.TotalSeconds;
-
-                    for (int i = start; i <= end; i++)
+                    if (puts.ContainsKey(lastArrival.BatchID))
                     {
-                        QueueSize[i]++;
+                        var t1 = lastArrival.Timestamp;
+                        var t2 = puts[lastArrival.BatchID].Value;
+
+                        int start = (int)t1.TimeOfDay.TotalSeconds;
+                        int end = (int)t2.TimeOfDay.TotalSeconds;
+
+                        for (int i = start; i <= end; i++)
+                        {
+                            QueueSize[i]++;
+                        }
                     }
                 }
-            }
 
-            return QueueSize;
+                return QueueSize;
+            }
         }
         public List<int> GetTimeInQueue(DateTime day)
         {
@@ -312,27 +397,30 @@ namespace Infrastructure
 
             var batchIDs = last901.Select(x => x.BatchID).ToList();
 
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID)).GroupBy(x => x.Order.BatchID).ToList().
                                                 ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
 
-            foreach (var lastArrival in last901)
-            {
-                if (puts.ContainsKey(lastArrival.BatchID))
+                foreach (var lastArrival in last901)
                 {
-                    var t1 = lastArrival.Timestamp;
-                    var t2 = puts[lastArrival.BatchID].Value;
+                    if (puts.ContainsKey(lastArrival.BatchID))
+                    {
+                        var t1 = lastArrival.Timestamp;
+                        var t2 = puts[lastArrival.BatchID].Value;
 
-                    if (t2.Subtract(t1).TotalSeconds < 0)
-                        throw new InvalidOperationException();
+                        if (t2.Subtract(t1).TotalSeconds < 0)
+                            throw new InvalidOperationException();
 
-                    qTimes.Add((int)t2.Subtract(t1).TotalSeconds);
-                    
+                        qTimes.Add((int)t2.Subtract(t1).TotalSeconds);
+
+                    }
                 }
-            }
 
-            return qTimes;
+                return qTimes;
+            }
         }
         public List<int> GetTimeInQueue(DateTime day, Tuple<TimeSpan, TimeSpan> interval)
         {
@@ -343,7 +431,9 @@ namespace Infrastructure
 
             var batchIDs = last901.Select(x => x.BatchID).ToList();
 
-            var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+            using (var db = new WarehouseContext())
+            {
+                var puts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
                                                 && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date
                                                 && batchIDs.Contains(x.Order.BatchID)
                                                 && DbFunctions.CreateTime(x.PutTimestamp.Value.Hour, x.PutTimestamp.Value.Minute, x.PutTimestamp.Value.Second) >= interval.Item1
@@ -351,45 +441,49 @@ namespace Infrastructure
                                                GroupBy(x => x.Order.BatchID).ToList().
                                                 ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
 
-            foreach (var lastArrival in last901)
-            {
-                if (puts.ContainsKey(lastArrival.BatchID))
+                foreach (var lastArrival in last901)
                 {
-                    var t1 = lastArrival.Timestamp;
-                    var t2 = puts[lastArrival.BatchID].Value;
+                    if (puts.ContainsKey(lastArrival.BatchID))
+                    {
+                        var t1 = lastArrival.Timestamp;
+                        var t2 = puts[lastArrival.BatchID].Value;
 
-                    if (t2.Subtract(t1).TotalSeconds < 0)
-                        throw new InvalidOperationException();
+                        if (t2.Subtract(t1).TotalSeconds < 0)
+                            throw new InvalidOperationException();
 
-                    qTimes.Add((int)t2.Subtract(t1).TotalSeconds);
+                        qTimes.Add((int)t2.Subtract(t1).TotalSeconds);
 
+                    }
                 }
-            }
 
-            return qTimes;
+                return qTimes;
+            }
         }
         public int[] GetItemsInRecircOverTime(DateTime day)
         {
-            var ItemsInRecirc = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
-            var groups = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
-                                               DbFunctions.TruncateTime(x.Timestamp) == day.Date).
-                                               GroupBy(x => x.BatchID).Where(x => x.Count() > 1).Select(x => x.OrderBy(y => y.Timestamp));
-
-            foreach(var group in groups)
+            using (var db = new WarehouseContext())
             {
-                var t1 = group.First().Timestamp;
-                var t2 = group.Last().Timestamp;
+                var ItemsInRecirc = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
+                var groups = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+                                                   DbFunctions.TruncateTime(x.Timestamp) == day.Date).
+                                                   GroupBy(x => x.BatchID).Where(x => x.Count() > 1).Select(x => x.OrderBy(y => y.Timestamp));
 
-                int start = (int)t1.TimeOfDay.TotalSeconds;
-                int end = (int)t2.TimeOfDay.TotalSeconds;
-
-                for(int i = start; i <= end; i++)
+                foreach (var group in groups)
                 {
-                    ItemsInRecirc[i]++;
-                }
-            }
+                    var t1 = group.First().Timestamp;
+                    var t2 = group.Last().Timestamp;
 
-            return ItemsInRecirc;
+                    int start = (int)t1.TimeOfDay.TotalSeconds;
+                    int end = (int)t2.TimeOfDay.TotalSeconds;
+
+                    for (int i = start; i <= end; i++)
+                    {
+                        ItemsInRecirc[i]++;
+                    }
+                }
+
+                return ItemsInRecirc;
+            }
         }
         public List<Tuple<DateTime, DateTime>> FindBreaks(DateTime day, int minBreakTime)
         {
