@@ -254,6 +254,84 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static Simulation SimWithIntervalQueueSize(FactoryParams factoryParams,
+                                                          DistributionSelectionParameters distParams,
+                                                          RequiredDistributions dists,
+                                                          int QueueIntervalLength)
+        {
+            var db = new WarehouseData();
+
+            var qSizeOverTime = db.GetQueueSizeOverTime(distParams.SelectedDaysForData[0]);
+
+            var qIntervalAvg = new int[3600 * 24 / QueueIntervalLength];
+
+            var output = new Dictionary<int, int>();
+            var shiftedOutput = new Dictionary<int, int>();
+
+            for (int i = QueueIntervalLength; i <= 3600 * 24; i += QueueIntervalLength)
+            {
+                var obs = new List<int>();
+                for(int j = i - QueueIntervalLength; j < i; j++)
+                {
+                    obs.Add(qSizeOverTime[j]);
+                }
+                qIntervalAvg[i/QueueIntervalLength - 1] = (int)Math.Round(obs.Average());
+
+                output.Add(i, qIntervalAvg[i / QueueIntervalLength - 1]);
+            }
+            
+            factoryParams.Logger.LogPutsPerHour("QueueSizeAvgOverTime", output);
+
+            if (factoryParams.StartMin * 60 % QueueIntervalLength == 0)
+            {
+                for (int i = 0; i <= factoryParams.DayLength; i += QueueIntervalLength)
+                {
+                    shiftedOutput.Add(i, output[i + factoryParams.StartMin*60]);
+                }
+            }
+            else
+            {
+                throw new Exception();
+            }
+
+            factoryParams.Logger.LogPutsPerHour("QueueSizeAvgOverTime_Sim", shiftedOutput);
+
+            var results = new ResultsWithWarmup(factoryParams.DayLength * factoryParams.NWarmupDays, factoryParams.DayLength * (factoryParams.NWarmupDays + 1));
+
+            Simulation simulation = new Simulation(results, factoryParams.DayLength * (factoryParams.NWarmupDays + 1));
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+            IDestinationBlock P06 = new PutwallWithIntervalQueue(dists.ProcessTimeDists,
+                                                                         dists.RecircTimeDists,
+                                                                         dists.QueueTimeDists,
+                                                                         simulation,
+                                                                         disposalBlock,
+                                                                         factoryParams.QueueSize,
+                                                                         dists.PPXSchedule,
+                                                                         results,
+                                                                         shiftedOutput);
+            var data = new WarehouseData();
+
+            var locationDict = new Dictionary<int, IDestinationBlock>();
+            locationDict.Add(data.P06.LocationID, P06);
+
+            var DestinationDists = new Dictionary<int, IDistribution<IDestinationBlock>>();
+            foreach (KeyValuePair<int, LocationDist> p in dists.DestinationDists)
+            {
+                DestinationDists.Add(p.Key, new LocationWrapper(p.Value, locationDict, simulation, disposalBlock));
+            }
+
+
+            var ArrivalBlock = new ArrivalBlockII(dists.ArrivalDists, DestinationDists, P06, dists.BreakTimes, simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, firstArrival);
+
+            return simulation;
+
+        }
         public static Simulation SimWithSpecificWarmupDay(FactoryParams factoryParams,
                                                           RequiredDistributions dists)
         {
