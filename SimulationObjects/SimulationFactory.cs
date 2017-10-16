@@ -35,6 +35,7 @@ namespace SimulationObjects
         public int QueueSize { get; set; }
         public int NWarmupDays { get; set; }
         public ILogger Logger { get; set; }
+        public int InitialNumberInQueue { get; set; } = 0;
     }
     public class DistributionSelectionParameters
     {
@@ -254,6 +255,46 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static Simulation SimWithFullQueueAndNoDoubleQueue(FactoryParams factoryParams,
+                                                          RequiredDistributions dists)
+        {
+            var results = new SimulationResults(factoryParams.DayLength);
+
+            Simulation simulation = new Simulation(results, factoryParams.DayLength * (factoryParams.NWarmupDays + 1));
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+            PutwallWithIntervalDistsII P06 = new PutwallWithIntervalDistsII(dists.ProcessTimeDists,
+                                                                   dists.RecircTimeDists,
+                                                                   simulation,
+                                                                   disposalBlock,
+                                                                   factoryParams.QueueSize,
+                                                                   dists.PPXSchedule,
+                                                                   results);
+
+            var deQueueEvents = P06.InitializeQueue(factoryParams.InitialNumberInQueue);
+
+
+            var data = new WarehouseData();
+
+            var locationDict = new Dictionary<int, IDestinationBlock>();
+            locationDict.Add(data.P06.LocationID, P06);
+
+            var DestinationDists = new Dictionary<int, IDistribution<IDestinationBlock>>();
+            foreach (KeyValuePair<int, LocationDist> p in dists.DestinationDists)
+            {
+                DestinationDists.Add(p.Key, new LocationWrapper(p.Value, locationDict, simulation, disposalBlock));
+            }
+
+
+            var ArrivalBlock = new ArrivalBlockII(dists.ArrivalDists, DestinationDists, P06, dists.BreakTimes, simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, firstArrival, deQueueEvents);
+
+            return simulation;
+        }
         public static Simulation SimWithIntervalQueueSize(FactoryParams factoryParams,
                                                           DistributionSelectionParameters distParams,
                                                           RequiredDistributions dists,

@@ -426,17 +426,17 @@ namespace Infrastructure
                 }
 
                 var batchIDs = last901.Select(x => x.BatchID).ToList();
-
-                var puts = new Dictionary<int, DateTime?>();
+                
 
                 var dates = data.Select(y => y.Date).ToList();
 
 
-                var newPuts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
-                                                    && dates.Contains(DbFunctions.TruncateTime(x.PutTimestamp).Value)
-                                                    && batchIDs.Contains(x.Order.BatchID)).
-                                                    GroupBy(x => x.Order.BatchID).
-                                                    ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
+                var p = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                               && batchIDs.Contains(x.Order.BatchID)).Include(x => x.Order).ToList();
+                                                    
+                var puts = p.Where(x => dates.Contains(x.PutTimestamp.Value.Date)).
+                                    GroupBy(x => x.Order.BatchID).
+                                    ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
 
                 var dayStart = new DateTime(day.Year, day.Month, day.Day, 0, 0, 0);
                 var dayEnd = new DateTime(day.Year, day.Month, day.Day, 23, 59, 59);
