@@ -61,11 +61,20 @@ namespace WarehouseSimulation
             {
                 new DateTime(2015,11,10)
             };
+
+            var qSizeData = new List<DateTime>()
+            {
+                new DateTime(2015,11,9),
+                new DateTime(2015,11,10),
+                new DateTime(2015,11,11),
+                new DateTime(2015,11,12),
+                //new DateTime(2015,11,13)
+            };
             var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6, 0, 0), new TimeSpan(23, 59, 59));
 
             var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
             var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
-            var queueSizeOverTime = Data.GetQueueSizeOverTime(availability[0]);
+            var queueSizeOverTime = Data.GetQueueSizeOverTime(qSizeData, availability[0]);
             var qTimes = Data.GetTimeInQueue(availability[0], statsInterval);
 
             using (var writer = new System.IO.StreamWriter(basePath + "InterArrivals_over_time_real.txt"))

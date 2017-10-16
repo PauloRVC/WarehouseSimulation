@@ -412,6 +412,60 @@ namespace Infrastructure
                 return QueueSize;
             }
         }
+        public int[] GetQueueSizeOverTime(List<DateTime> data, DateTime day)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var QueueSize = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
+
+                var last901 = new List<BatchScan>();
+
+                foreach(DateTime d in data)
+                {
+                    last901.AddRange(LastArrivals(Scanner901, d));
+                }
+
+                var batchIDs = last901.Select(x => x.BatchID).ToList();
+
+                var puts = new Dictionary<int, DateTime?>();
+
+                var dates = data.Select(y => y.Date).ToList();
+
+
+                var newPuts = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                                    && dates.Contains(DbFunctions.TruncateTime(x.PutTimestamp).Value)
+                                                    && batchIDs.Contains(x.Order.BatchID)).
+                                                    GroupBy(x => x.Order.BatchID).
+                                                    ToDictionary(x => x.Key, x => x.Select(y => y.PutTimestamp).Min());
+
+                var dayStart = new DateTime(day.Year, day.Month, day.Day, 0, 0, 0);
+                var dayEnd = new DateTime(day.Year, day.Month, day.Day, 23, 59, 59);
+                foreach (var lastArrival in last901)
+                {
+                    if (puts.ContainsKey(lastArrival.BatchID))
+                    {
+                        var t1 = lastArrival.Timestamp;
+                        var t2 = puts[lastArrival.BatchID].Value;
+
+                        if(!(t2 < dayStart | t1 > dayEnd))
+                        {
+                            t1 = new DateTime(Math.Max(t1.Ticks, dayStart.Ticks));
+                            t2 = new DateTime(Math.Min(t2.Ticks, dayEnd.Ticks));
+
+                            int start = (int)t1.TimeOfDay.TotalSeconds;
+                            int end = (int)t2.TimeOfDay.TotalSeconds;
+
+                            for (int i = start; i <= end; i++)
+                            {
+                                QueueSize[i]++;
+                            }
+                        }
+                    }
+                }
+
+                return QueueSize;
+            }
+        }
         public List<int> GetTimeInQueue(DateTime day)
         {
             var qTimes = new List<int>();
