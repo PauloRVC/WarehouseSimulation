@@ -119,7 +119,7 @@ namespace WarehouseSimulation
                 }
             }
 
-
+            
 
 
             //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
@@ -191,6 +191,22 @@ namespace WarehouseSimulation
                 CapacityIntervalSize = 20
             };
 
+            var pOfRecirc = Data.RecirculationVSQueueSize(availability[0], qSizeData, distParams.IntervalForOtherDistributions);
+
+            using (var writer = new System.IO.StreamWriter(basePath + "ConditionalProbDist.txt"))
+            {
+                writer.WriteLine("Queue Size \t Number of Recirculations Observed \t Number of Lane Entries Observed \t Total \t P(Recirc|QSize)");
+
+                foreach(var p in pOfRecirc.OrderBy(x => x.Key))
+                {
+                    writer.WriteLine(p.Key + "\t" + 
+                                     p.Value.Item1 + "\t" + 
+                                     p.Value.Item2 + "\t" + 
+                                     (p.Value.Item1 + p.Value.Item2) + "\t" + 
+                                     ((double)p.Value.Item1 / ((double)p.Value.Item1 + (double)p.Value.Item2)));
+                }
+            }
+
             DateTime warmupDay = new DateTime(2015, 11, 9);
 
             var warmupParams = new DistributionSelectionParameters()
@@ -212,7 +228,9 @@ namespace WarehouseSimulation
 
             var AllDists = allDists.CreateNCopies(20);
 
-            var pOfRecirc = Data.RecirculationVSQueueSize(availability[0], qSizeData, distParams.IntervalForOtherDistributions);
+            
+
+            
 
             Parallel.ForEach(iterations, i =>
             {
