@@ -55,6 +55,8 @@ namespace SimulationObjects.SimBlocks
 
                 int time = 0;
 
+                //Results.ReportArrival(batch, 0);
+
                 var newEvent = new EndQueueEvent(DeQueue, batch, time);
 
                 Queue.Add(batch);

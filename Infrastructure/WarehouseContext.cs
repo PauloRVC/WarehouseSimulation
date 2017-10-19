@@ -580,6 +580,79 @@ namespace Infrastructure
 
             return breakTimes;
         }
+        public Dictionary<int, List<int>> QueueObservationsPerInterval(DateTime day, List<DateTime> qData, int interval, int startSecond, int duration)
+        {
+            int[] qSizeOverTime = GetQueueSizeOverTime(qData, day);
+
+            var QueueObservations = new Dictionary<int, List<int>>();
+
+            for(int i=startSecond; i<=startSecond + duration; i += interval)
+            {
+                var obs = new List<int>();
+                for (int j = 0; j < interval; j++)
+                {
+                    obs.Add(qSizeOverTime[i + j]);
+                }
+                QueueObservations.Add(i, obs);
+            }
+
+            return QueueObservations;
+        }
+        public Dictionary<int, Tuple<int, int>> RecirculationVSQueueSize(DateTime day, List<DateTime> qData, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var RecircVsQSize = new Dictionary<int, Tuple<int, int>>();
+
+            int[] qSizeOverTime = GetQueueSizeOverTime(qData, day);
+
+            var dates = qData.Select(x => x.Date).ToList();
+
+            using(var db = new WarehouseContext())
+            {
+                var recircs = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID
+                                               && dates.Contains(DbFunctions.TruncateTime(x.Timestamp).Value)
+                                               && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
+                                               && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2).
+                                               GroupBy(x => x.BatchID).ToDictionary(x => x.Key, x => x.Where(y => y.Timestamp != x.Max(z => z.Timestamp))).SelectMany(x => x.Value);
+                var nonRecircs = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID
+                                                && dates.Contains(DbFunctions.TruncateTime(x.Timestamp).Value)
+                                                && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
+                                                && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2).
+                                               GroupBy(x => x.BatchID).ToDictionary(x => x.Key, x => x.Where(y => y.Timestamp != x.Max(z => z.Timestamp))).SelectMany(x => x.Value);
+                foreach (var batchScan in recircs)
+                {
+                    int time = (int)batchScan.Timestamp.TimeOfDay.TotalSeconds;
+
+                    int qSize = qSizeOverTime[time];
+
+                    if (RecircVsQSize.ContainsKey(qSize))
+                    {
+                        RecircVsQSize[qSize] = new Tuple<int, int>(RecircVsQSize[qSize].Item1 + 1, RecircVsQSize[qSize].Item2);
+                    }
+                    else
+                    {
+                        RecircVsQSize[qSize] = new Tuple<int, int>(1, 0);
+                    }
+                }
+
+                foreach (var batchScan in nonRecircs)
+                {
+                    int time = (int)batchScan.Timestamp.TimeOfDay.TotalSeconds;
+
+                    int qSize = qSizeOverTime[time];
+
+                    if (RecircVsQSize.ContainsKey(qSize))
+                    {
+                        RecircVsQSize[qSize] = new Tuple<int, int>(RecircVsQSize[qSize].Item1, RecircVsQSize[qSize].Item2 + 1);
+                    }
+                    else
+                    {
+                        RecircVsQSize[qSize] = new Tuple<int, int>(0,1);
+                    }
+                }
+            }
+
+            return RecircVsQSize;
+        }
 
         
     }

@@ -44,5 +44,6 @@ namespace Infrastructure.Models
         /// The time of the scan.
         /// </summary>
         public DateTime Timestamp { get; set; }
+        
     }
 }

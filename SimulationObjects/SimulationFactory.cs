@@ -255,6 +255,50 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static Simulation SimWithConditionalPofRecirc(FactoryParams factoryParams,
+                                                             RequiredDistributions dists,
+                                                             Dictionary<int, Tuple<int, int>> pOfRecirc)
+        {
+            var results = new SimulationResults(factoryParams.DayLength);
+
+            Simulation simulation = new Simulation(results, factoryParams.DayLength * (factoryParams.NWarmupDays + 1));
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+            var data = new WarehouseData();
+
+            var P06 = new PutwallWithConditionalPofRecirc(dists.ProcessTimeDists,
+                                                                   dists.RecircTimeDists,
+                                                                   simulation,
+                                                                   disposalBlock,
+                                                                   factoryParams.QueueSize,
+                                                                   dists.PPXSchedule,
+                                                                   results, 
+                                                                   pOfRecirc);
+
+            var deQueueEvents = P06.InitializeQueue(factoryParams.InitialNumberInQueue);
+
+
+            
+
+            var locationDict = new Dictionary<int, IDestinationBlock>();
+            locationDict.Add(data.P06.LocationID, P06);
+
+            var DestinationDists = new Dictionary<int, IDistribution<IDestinationBlock>>();
+            foreach (KeyValuePair<int, LocationDist> p in dists.DestinationDists)
+            {
+                DestinationDists.Add(p.Key, new LocationWrapper(p.Value, locationDict, simulation, disposalBlock));
+            }
+
+
+            var ArrivalBlock = new ArrivalBlockII(dists.ArrivalDists, DestinationDists, P06, dists.BreakTimes, simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, firstArrival, deQueueEvents);
+
+            return simulation;
+        }
         public static Simulation SimWithFullQueueAndNoDoubleQueue(FactoryParams factoryParams,
                                                           RequiredDistributions dists)
         {

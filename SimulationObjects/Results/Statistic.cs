@@ -8,25 +8,17 @@ namespace SimulationObjects.Results
 {
     public class Statistic
     {
-        public double Average { get; private set; }
-        public double StdDev { get; private set; }
+        public double Average { get { return Observations.Average(); } }
+        public double StdDev { get { return Observations.StandardDeviation(); } }
         public List<double> Observations { get; private set; }
 
         public Statistic(List<double> observations)
         {
             Observations = observations;
-
-            if (observations.Count > 0)
-            {
-                Average = Observations.Average();
-                StdDev = Observations.StandardDeviation();
-            }
         }
         public void AddObservation(double observation)
         {
             Observations.Add(observation);
-            Average = Observations.Average();
-            StdDev = Observations.StandardDeviation();
         }
     }
 }
