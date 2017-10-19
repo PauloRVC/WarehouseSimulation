@@ -48,7 +48,7 @@ namespace SimulationObjects.SimBlocks
                 if (ConditionProbOfRecirc.ContainsKey(Queue.Count))
                 {
                     int nObs = ConditionProbOfRecirc[Queue.Count].Item1 + ConditionProbOfRecirc[Queue.Count].Item2;
-                    double pRecirc = ConditionProbOfRecirc[Queue.Count].Item1 / nObs;
+                    double pRecirc = (double)ConditionProbOfRecirc[Queue.Count].Item1 / (double)nObs;
 
                     if(rng.NextDouble() <= pRecirc)
                     {

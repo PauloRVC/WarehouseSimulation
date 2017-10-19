@@ -128,7 +128,7 @@ namespace WarehouseSimulation
 
 
 
-            logger.LogDBStats("DBStats2", availability.First(), 600, statsInterval);
+            //logger.LogDBStats("DBStats2", availability.First(), 600, statsInterval);
             //logger.LogDBStats("DBStats", availability.First());
             //logger.LogDBStats("DBStats", availability.First(), 600);
 

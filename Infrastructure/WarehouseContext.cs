@@ -617,7 +617,7 @@ namespace Infrastructure
                                                 && dates.Contains(DbFunctions.TruncateTime(x.Timestamp).Value)
                                                 && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
                                                 && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2).
-                                               GroupBy(x => x.BatchID).ToDictionary(x => x.Key, x => x.Where(y => y.Timestamp != x.Max(z => z.Timestamp))).SelectMany(x => x.Value);
+                                               GroupBy(x => x.BatchID).ToDictionary(x => x.Key, x => x.Where(y => y.Timestamp == x.Max(z => z.Timestamp))).SelectMany(x => x.Value);
                 foreach (var batchScan in recircs)
                 {
                     int time = (int)batchScan.Timestamp.TimeOfDay.TotalSeconds;
