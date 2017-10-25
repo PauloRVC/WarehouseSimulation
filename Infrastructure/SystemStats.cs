@@ -17,6 +17,8 @@ namespace Infrastructure
         public Dictionary<ProcessType, int> ArrivalCount { get; set; }
         public int ExitCount { get; set; }
 
+        public ILogger Logger = new NullLogger();
+
         public SystemStats(DateTime day)
         {
             var data = new WarehouseData();
@@ -90,6 +92,39 @@ namespace Infrastructure
             AvgNumTimesRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x => Math.Max(0, x.Item2.Where(y => y.Item1 == data.P06.LocationID).Count())).Average());
             AvgNumTimesRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => Math.Max(0, x.Item2.Count)).Average());
 
+            Logger.LogDistribution("RecircDist_Real", putWallRecircGroups.Select(x =>
+                                    (int)sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).ToList());
+            AvgTimeRecirc = new Dictionary<ProcessType, double>();
+            AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
+                                    sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+            AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+        }
+        public SystemStats(DateTime day, double anomolyLimit, Tuple<TimeSpan, TimeSpan> interval, ILogger logger)
+        {
+            Logger = logger;
+            var data = new WarehouseData();
+
+            ArrivalCount = CountArrivals(data.FirstArrivals(data.Scanner901, day).
+                Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                    x.Timestamp.TimeOfDay <= interval.Item2).ToList(), data);
+
+            ExitCount = data.GetNPuts(day, interval);
+
+            AvgTimeInSystem = CalcAvgTimeInSystem(data, day, interval);
+            AvgTimeInProcess = CalcAvgTimeInProcess(data, day, interval);
+            AvgTimeInQueue = CalcAvgTimeInQueue(data, day, interval);
+
+            var recircGroups = data.GetRecircGroups(day, interval);
+
+            var putWallRecircGroups = recircGroups.Where(x => x.Item2.Select(y => y.Item1).Contains(data.P06.LocationID));
+            var nonPutwallRecircGroups = recircGroups.Where(x => !x.Item2.Select(y => y.Item1).Contains(data.P06.LocationID));
+
+            AvgNumTimesRecirc = new Dictionary<ProcessType, double>();
+            AvgNumTimesRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x => Math.Max(0, x.Item2.Where(y => y.Item1 == data.P06.LocationID).Count() - 1)).Average());
+            AvgNumTimesRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => Math.Max(0, x.Item2.Count - 1)).Average());
+
+            Logger.LogDistribution("RecircDist_Real", putWallRecircGroups.Select(x =>
+                                    (int)sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).ToList());
             AvgTimeRecirc = new Dictionary<ProcessType, double>();
             AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
                                     sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());

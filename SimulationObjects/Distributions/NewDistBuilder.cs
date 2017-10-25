@@ -199,6 +199,7 @@ namespace SimulationObjects.Distributions
             //Faking recirc time with constant 30s
             //return new EmpiricalDist(new List<Tuple<double, int>>() { new Tuple<double, int>(1, 30) });
         }
+
         public IDistribution<int> BuildTimeInQueueDistribution(List<DateTime> selectedDays, int anomolyLimit, Tuple<TimeSpan, TimeSpan> interval)
         {
             List<List<int>> sTimeList = new List<List<int>>();

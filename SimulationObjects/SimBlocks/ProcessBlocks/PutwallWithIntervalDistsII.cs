@@ -54,10 +54,13 @@ namespace SimulationObjects.SimBlocks
                 var batch = new Batch(this, Infrastructure.ProcessType.Putwall);
 
                 int time = 0;
+                
 
                 //Results.ReportArrival(batch, 0);
 
                 var newEvent = new EndQueueEvent(DeQueue, batch, time);
+
+                batch.CurrentEvent = newEvent;
 
                 Queue.Add(batch);
 

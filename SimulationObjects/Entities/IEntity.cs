@@ -1,4 +1,5 @@
 ﻿using Infrastructure;
+using SimulationObjects.Events;
 using SimulationObjects.SimBlocks;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,6 @@ namespace SimulationObjects.Entities
     {
         IDestinationBlock Destination { get; set; }
         ProcessType ProcessType { get; }
+        IEvent CurrentEvent { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Infrastructure;
+using SimulationObjects.Events;
 using SimulationObjects.SimBlocks;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ namespace SimulationObjects.Entities
     {
         public IDestinationBlock Destination { get; set; }
         public ProcessType ProcessType { get; private set; }
+        public IEvent CurrentEvent { get;  set; }
+     
         public Batch(IDestinationBlock destination)
         {
             Destination = destination;

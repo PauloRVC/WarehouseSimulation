@@ -210,7 +210,7 @@ namespace SimulationObjects.Utils
         }
         public void LogDBStats(string name, DateTime day, double anomolyLimit, Tuple<TimeSpan, TimeSpan> interval)
         {
-            var dbStats = new SystemStats(day, anomolyLimit, interval);
+            var dbStats = new SystemStats(day, anomolyLimit, interval, this);
 
             WriteDBStatsToFile(name, dbStats);
         }

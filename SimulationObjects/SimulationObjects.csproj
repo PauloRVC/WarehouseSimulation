@@ -111,6 +111,7 @@
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalDistributions.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalDistsII.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalQueue.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithNoMaxQSize.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithOperatorSchedule.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHSchedule.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHScheduleAndOperators.cs" />
