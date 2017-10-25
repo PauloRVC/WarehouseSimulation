@@ -55,8 +55,8 @@ namespace WarehouseSimulation
 
             var FinalResults = new MetaResults();
 
-            string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
-            //string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
+            //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
 
             var availability = new List<DateTime>()
             {
@@ -121,9 +121,9 @@ namespace WarehouseSimulation
 
 
 
-            //var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
+            var logger = new VerboseLogger(@"C:\Users\p2decarv\Desktop\SimLog");
             //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
-            var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
 
 
 
@@ -135,39 +135,15 @@ namespace WarehouseSimulation
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
             var iterations = Enumerable.Range(0, 20);
 
-            var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
-                {
-                    //complete distribution
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(22,0,0)),
+            var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
 
-                    //different intervals
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(6,30,0)),
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,30,0), new TimeSpan(7,0,0)),
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(9,0,0)),
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(13,30,0)),
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,30,0), new TimeSpan(15,30,0)),
-                    //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,30,0), new TimeSpan(22,0,0)),
-
-                    //hourly intervals
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(7,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7,0,0), new TimeSpan(8,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(8,0,0), new TimeSpan(9,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(9,0,0), new TimeSpan(10,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(10,0,0), new TimeSpan(11,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(11,0,0), new TimeSpan(12,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(12,0,0), new TimeSpan(13,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(13,0,0), new TimeSpan(14,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(14,0,0), new TimeSpan(15,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(15,0,0), new TimeSpan(16,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(16,0,0), new TimeSpan(17,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(17,0,0), new TimeSpan(18,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(18,0,0), new TimeSpan(19,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(19,0,0), new TimeSpan(20,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(20,0,0), new TimeSpan(21,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(21,0,0), new TimeSpan(22,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(22,0,0), new TimeSpan(23,0,0)),
-                    new Tuple<TimeSpan, TimeSpan>(new TimeSpan(23,0,0), new TimeSpan(24,0,0)),
-                };
+            int incrementSize = 30;
+            for (int i = 6*60; i < 24*60; i += incrementSize)
+            {
+                    intervals.Add(new Tuple<TimeSpan, TimeSpan>(new TimeSpan((int)Math.Floor((double) i / 60), i % 60, 0), 
+                        new TimeSpan((int)Math.Floor((double)(i + incrementSize) / 60), (i + incrementSize)% 60, 0)));
+            }
+                                   
 
             var breakTimes = Data.FindBreaks(availability[0], 600);
 
@@ -187,7 +163,7 @@ namespace WarehouseSimulation
                 ArrivalDistributionBreakpoints = intervals,
                 BreakTimes = breakTimes,
                 IntervalForOtherDistributions = statsInterval,
-                CapacityIntervalSize = 20
+                CapacityIntervalSize = incrementSize
             };
 
             var pOfRecirc = Data.RecirculationVSQueueSize(availability[0], qSizeData, distParams.IntervalForOtherDistributions);
