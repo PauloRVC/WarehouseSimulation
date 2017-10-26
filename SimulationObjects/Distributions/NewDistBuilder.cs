@@ -59,7 +59,7 @@ namespace SimulationObjects.Distributions
 
                     interArrivalList.Add(todaysInterArrivalTimes);
 
-                    Logger.LogDistribution("ArrivalDistDay." + k + "." + j, todaysInterArrivalTimes);
+                    //Logger.LogDistribution("ArrivalDistDay." + k + "." + j, todaysInterArrivalTimes);
 
                     j++;
                 }
@@ -75,6 +75,10 @@ namespace SimulationObjects.Distributions
 
                 var probs = allObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / obsCount, x.Key)).ToList();
 
+                if(probs.Count == 0)
+                {
+                    probs.Add(new Tuple<double, int>(1, (int)periods[k].Item2.Subtract(periods[k].Item1).TotalSeconds));
+                }
                 if (probs.Select(x => x.Item1).Sum() < 0.99)
                     throw new InvalidOperationException();
 

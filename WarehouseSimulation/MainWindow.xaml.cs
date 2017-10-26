@@ -60,7 +60,7 @@ namespace WarehouseSimulation
 
             var availability = new List<DateTime>()
             {
-                new DateTime(2015,11,10)
+                new DateTime(2015,11,11)
             };
 
             var qSizeData = new List<DateTime>()
@@ -133,11 +133,11 @@ namespace WarehouseSimulation
 
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
-            var iterations = Enumerable.Range(0, 20);
+            var iterations = Enumerable.Range(0, 100);
 
             var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
 
-            int incrementSize = 30;
+            int incrementSize = 27;
             for (int i = 6*60; i < 24*60; i += incrementSize)
             {
                     intervals.Add(new Tuple<TimeSpan, TimeSpan>(new TimeSpan((int)Math.Floor((double) i / 60), i % 60, 0), 
@@ -150,11 +150,12 @@ namespace WarehouseSimulation
             var factoryParams = new FactoryParams()
             {
                 StartMin = 360,
-                DayLength = 64800,
-                QueueSize = 104,
+               // DayLength = 64800,
+                DayLength = 61200,
                 Logger = logger,
                 NWarmupDays = 0,
-                InitialNumberInQueue = 104
+                //InitialNumberInQueue = 104
+                InitialNumberInQueue = 51
             };
 
             var distParams = new DistributionSelectionParameters()
@@ -163,7 +164,7 @@ namespace WarehouseSimulation
                 ArrivalDistributionBreakpoints = intervals,
                 BreakTimes = breakTimes,
                 IntervalForOtherDistributions = statsInterval,
-                CapacityIntervalSize = incrementSize
+                CapacityIntervalSize = 27
             };
 
             var pOfRecirc = Data.RecirculationVSQueueSize(availability[0], qSizeData, distParams.IntervalForOtherDistributions);
@@ -201,7 +202,7 @@ namespace WarehouseSimulation
 
             var allDists = new RequiredDistributions(factoryParams, distParams, warmupDays);
 
-            var AllDists = allDists.CreateNCopies(20);
+            var AllDists = allDists.CreateNCopies(100);
 
 
 
