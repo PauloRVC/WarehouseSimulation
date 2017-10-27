@@ -10,10 +10,11 @@ namespace SimulationObjects.Events
     public class Arrival : IEvent
 
     {
-        public Arrival(IEntity batch, int time)
+        public Arrival(IEntity batch, int time, int createdTime)
         {
             Entity = batch;
             Time = time;
+            CreatedTime = createdTime;
         }
         public IEntity Entity
         {
@@ -24,6 +25,7 @@ namespace SimulationObjects.Events
         {
             get; private set;
         }
+        public int CreatedTime { get; private set; }
         public bool IsArrival
         {
             get

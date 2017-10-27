@@ -100,6 +100,7 @@
     <Compile Include="Distributions\IDistribution.cs" />
     <Compile Include="Distributions\IDistributionBuilder.cs" />
     <Compile Include="Events\IEvent.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\ConsumeCapacityPutwall.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\IDestinationBlock.cs" />
     <Compile Include="SimBlocks\ISimBlock.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\NonPutwallLane.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="SimBlocks\ProcessBlocks\Putwall.cs" />
     <Compile Include="Distributions\RealDistributionBuilder.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithConditionalPofRecirc.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithConditionalProbAndOperators.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalDistributions.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalDistsII.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalQueue.cs" />

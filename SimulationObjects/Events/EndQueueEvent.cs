@@ -12,16 +12,18 @@ namespace SimulationObjects.Events
         public IEntity Entity { get; private set; }
 
         public int Time { get; private set; }
+        public int CreatedTime { get; private set; }
 
         public bool IsArrival => false;
 
         private Action<IEntity> Conclusion;
 
-        public EndQueueEvent(Action<IEntity> conclusion, IEntity entity, int time)
+        public EndQueueEvent(Action<IEntity> conclusion, IEntity entity, int time, int createdTime)
         {
             Entity = entity;
             Time = time;
             Conclusion = conclusion;
+            CreatedTime = createdTime;
         }
 
         public void Conclude()

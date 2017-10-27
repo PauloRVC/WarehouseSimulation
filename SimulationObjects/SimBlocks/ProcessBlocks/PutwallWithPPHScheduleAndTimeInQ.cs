@@ -57,7 +57,7 @@ namespace SimulationObjects.SimBlocks
 
                 int time = 0;
 
-                var newEvent = new EndQueueEvent(DeQueue, batch, time);
+                var newEvent = new EndQueueEvent(DeQueue, batch, time, Simulation.CurrentTime);
 
                 Queue.Add(batch);
 
@@ -89,7 +89,7 @@ namespace SimulationObjects.SimBlocks
 
                     Simulation.Results.ReportProcessRealization(batch, Simulation.CurrentTime, Time, new List<IResource>(), this);
 
-                    NextEvent = new EndProcessEvent(Operators.First(), batch, Time);
+                    NextEvent = new EndProcessEvent(Operators.First(), batch, Time, Simulation.CurrentTime);
                 }
                 else
                 {
@@ -101,7 +101,7 @@ namespace SimulationObjects.SimBlocks
 
                     Simulation.Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
 
-                    NextEvent = new EndQueueEvent(DeQueue, batch, Time);
+                    NextEvent = new EndQueueEvent(DeQueue, batch, Time, Simulation.CurrentTime);
 
                 }
             }
@@ -119,7 +119,7 @@ namespace SimulationObjects.SimBlocks
 
                     Simulation.Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
 
-                    NextEvent = new EndQueueEvent(NewDeQueue, batch, Time);
+                    NextEvent = new EndQueueEvent(NewDeQueue, batch, Time, Simulation.CurrentTime);
                 }
                 else
                 {
@@ -129,7 +129,7 @@ namespace SimulationObjects.SimBlocks
 
                     Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
 
-                    NextEvent = new RecirculateEvent(batch, Time);
+                    NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
                 }
             }
             

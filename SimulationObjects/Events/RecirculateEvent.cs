@@ -9,12 +9,14 @@ namespace SimulationObjects.Events
 {
     public class RecirculateEvent : IEvent
     {
-        public RecirculateEvent(IEntity entity, int time)
+        public RecirculateEvent(IEntity entity, int time, int createdTime)
         {
             Entity = entity;
             Time = time;
             IsArrival = false;
+            CreatedTime = createdTime;
         }
+        public int CreatedTime { get; private set; }
         public IEntity Entity { get; private set; }
 
         public int Time { get; private set; }

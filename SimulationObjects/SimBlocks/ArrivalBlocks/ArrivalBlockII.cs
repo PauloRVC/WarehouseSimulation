@@ -64,7 +64,7 @@ namespace SimulationObjects.SimBlocks
                 Simulation.Results.ReportArrival(Batch, Time);
             }
 
-            var nextEvent = new Arrival(Batch, Time);
+            var nextEvent = new Arrival(Batch, Time, Simulation.CurrentTime);
 
             Batch.CurrentEvent = nextEvent;
 

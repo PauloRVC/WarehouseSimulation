@@ -18,7 +18,7 @@ namespace SimulationObjects.SimBlocks
         public IEvent GetNextEvent(IEntity batch)
         {
             batch.Destination = NextDestination;
-            return new GenericEvent(batch, Simulation.CurrentTime);
+            return new GenericEvent(batch, Simulation.CurrentTime, Simulation.CurrentTime);
         }
     }
 }

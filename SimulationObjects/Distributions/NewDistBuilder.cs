@@ -29,7 +29,67 @@ namespace SimulationObjects.Distributions
         {
             Logger = new NullLogger();
         }
+        public List<IDistribution<int>>BuildProcessTimeDists(List<DateTime> selectedDays, int anomolyLimit, List<Tuple<TimeSpan, TimeSpan>> periods)
+        {
+            var pTimeList = new List<List<int>>();
 
+            var scanner901 = data.Scanner901;
+
+            var distributions = new List<IDistribution<int>>();
+
+            for (int k = 0; k < periods.Count; k++)
+            {
+                //For each day, find the ordered list of the time first arrival of each batch at scanner 901
+                int j = 1;
+                foreach (DateTime day in selectedDays)
+                {
+                    //Get the last batchscan at 901
+                    var todaysArrivals = data.LastArrivals(scanner901, day);
+
+                    //Get the time the first item in batch was put
+                    var firstPutTimesDict = data.FirstPutTimesDict(day, todaysArrivals.Select(x => x.BatchID).ToList(), periods[k]);
+
+                    //Get the time the last item in the batch was put
+                    var lastPutTimesDict = data.LastPutTimesDict(day, todaysArrivals.Select(x => x.BatchID).ToList(), periods[k]);
+
+                    //Get the batches that exist in both
+                    var validBatches = firstPutTimesDict.Keys.Intersect(lastPutTimesDict.Keys);
+
+                    var times = validBatches.Select(x => (int)lastPutTimesDict[x].Subtract(firstPutTimesDict[x]).TotalSeconds).ToList();
+
+                    pTimeList.Add(times);
+
+                    Logger.LogDistribution("ProcessTimeDist" + j + "_" + k, times);
+
+                    j++;
+                }
+
+                //var allObservations = interArrivalList.SelectMany(x => x).Where(x => x < 70);
+
+                var allObservations = pTimeList.SelectMany(x => x).Where(x => x < anomolyLimit);
+
+                if (allObservations.Any(x => x < 0))
+                    throw new InvalidOperationException();
+
+                int obsCount = allObservations.Count();
+
+                var probs = allObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / obsCount, x.Key)).ToList();
+
+                if (probs.Count == 0)
+                {
+                    probs.Add(new Tuple<double, int>(1, (int)periods[k].Item2.Subtract(periods[k].Item1).TotalSeconds));
+                }
+                if (probs.Select(x => x.Item1).Sum() < 0.99)
+                    throw new InvalidOperationException();
+
+                var arrivalDist = new EmpiricalDist(probs);
+
+                distributions.Add(arrivalDist);
+            }
+
+
+            return distributions;
+        }
         public List<IDistribution<int>> BuildArrivalDist(List<DateTime> selectedDays, int anomolyLimit, List<Tuple<TimeSpan, TimeSpan>> periods)
         {
 

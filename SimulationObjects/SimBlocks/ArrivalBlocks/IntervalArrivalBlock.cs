@@ -37,7 +37,7 @@ namespace SimulationObjects.SimBlocks
                 Simulation.Results.ReportArrival(Batch, Time);
             }
 
-            return new Arrival(Batch, Time);
+            return new Arrival(Batch, Time, Simulation.CurrentTime);
         }
     }
 }

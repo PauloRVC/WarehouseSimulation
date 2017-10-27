@@ -71,7 +71,7 @@ namespace SimulationObjects
                         EventQueue.Add(nextEvent);
                 }
                 newEvent.Conclude();
-                EventQueue = EventQueue.OrderBy(x => x.Time).ToList();
+                EventQueue = EventQueue.OrderBy(x => x.Time).ThenBy(x => x.CreatedTime).ToList();
                 iterCount++;
             }
 

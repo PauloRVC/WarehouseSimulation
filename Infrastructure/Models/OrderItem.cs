@@ -32,5 +32,9 @@ namespace Infrastructure.Models
         /// The time which this item belonging to this order was put.
         /// </summary>
         public DateTime? PutTimestamp { get; set; }
+
+        public int? OperatorID { get; set; }
+
+        public Operator Operator { get; set; }
     }
 }

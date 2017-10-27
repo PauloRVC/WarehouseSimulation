@@ -9,12 +9,14 @@ namespace SimulationObjects.Events
 {
     class GenericEvent : IEvent
     {
-        public GenericEvent(IEntity batch, int time)
+        public GenericEvent(IEntity batch, int time, int createdTime)
         {
             Entity = batch;
             IsArrival = false;
             Time = time;
+            CreatedTime = createdTime;
         }
+        public int CreatedTime { get; private set; }
         public IEntity Entity
         {
             get; private set;

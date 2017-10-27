@@ -35,6 +35,9 @@ namespace Infrastructure
             modelBuilder.Entity<BatchScan>().HasRequired(x => x.IntendedDestination).WithMany(y => y.IntendedDestinationBatchScans).HasForeignKey(x => x.IntendedDestinationID).WillCascadeOnDelete(false);
             modelBuilder.Entity<BatchScan>().HasRequired(x => x.ActualDestination).WithMany(y => y.ActualDestinationBatchScans).HasForeignKey(x => x.ActualDestinationID).WillCascadeOnDelete(false);
 
+            //modelBuilder.Entity<OrderItem>().HasOptional(x => x.Operator).WithMany(y => y.OrderItems).HasForeignKey(x => x.OperatorID);
+            modelBuilder.Entity<Operator>().HasMany(x => x.OrderItems).WithOptional(y => y.Operator).HasForeignKey(x => x.OperatorID);
+
 
             modelBuilder.Entity<OrderItem>().HasKey(x => new { x.OrderID, x.ItemID });
             modelBuilder.Entity<BatchScan>().HasKey(x => new { x.BatchID, x.CurrentLocationID, x.Timestamp });
@@ -318,6 +321,44 @@ namespace Infrastructure
                 }
 
                 return pph;
+            }
+        }
+        public Dictionary<int, int> GetOperatorsPerZMins(DateTime day, int z)
+        {
+            Dictionary<DateTime, int> indexLookup = new Dictionary<DateTime, int>();
+            int i = 0;
+            DateTime time = new DateTime(day.Year, day.Month, day.Day, 0, 0, 0);
+
+            indexLookup.Add(time, i);
+
+            do
+            {
+                i++;
+                time = time.AddMinutes(z);
+                indexLookup.Add(time, i);
+            } while (time.Day == day.Day);
+            using (var db = new WarehouseContext())
+            {
+                var intermed = db.OrderItems.Where(x => x.PutTimestamp.HasValue
+                                               && DbFunctions.TruncateTime(x.PutTimestamp) == day.Date).
+                                                GroupBy(x => x.Order.BatchID).Select(x => x.OrderByDescending(y => y.PutTimestamp).FirstOrDefault()).
+                                                ToList();
+
+                var lastPuts = intermed.GroupBy(x => GetTimeIndex(indexLookup, x.PutTimestamp.Value)).
+                                                    Select(x => new { timeIndex = x.Key, count = x.Select(y => y.OperatorID).Distinct().Count() });
+
+                var operatorsPerZ = new Dictionary<int, int>();
+                foreach (int k in indexLookup.Values)
+                {
+                    operatorsPerZ.Add(k, 0);
+                }
+
+                foreach (var a in lastPuts)
+                {
+                    operatorsPerZ[a.timeIndex] += a.count;
+                }
+
+                return operatorsPerZ;
             }
         }
         private int GetTimeIndex(Dictionary<DateTime, int> indexLookup, DateTime time)

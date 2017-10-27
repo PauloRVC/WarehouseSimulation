@@ -65,6 +65,7 @@
     <Compile Include="Models\Batch.cs" />
     <Compile Include="Models\BatchScan.cs" />
     <Compile Include="Models\Item.cs" />
+    <Compile Include="Models\Operator.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\OrderItem.cs" />
     <Compile Include="Models\Location.cs" />

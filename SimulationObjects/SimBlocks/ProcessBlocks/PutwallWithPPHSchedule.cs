@@ -47,7 +47,7 @@ namespace SimulationObjects.SimBlocks
 
                 Simulation.Results.ReportProcessRealization(batch, Simulation.CurrentTime, Time, new List<IResource>(), this);
 
-                NextEvent = new EndProcessEvent(Operators.First(), batch, Time);
+                NextEvent = new EndProcessEvent(Operators.First(), batch, Time, Simulation.CurrentTime);
             }
             else
             {
@@ -61,7 +61,7 @@ namespace SimulationObjects.SimBlocks
 
                     Simulation.Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
                     
-                    NextEvent = new EndQueueEvent(DeQueue, batch, Time);
+                    NextEvent = new EndQueueEvent(DeQueue, batch, Time, Simulation.CurrentTime);
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace SimulationObjects.SimBlocks
 
                     Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
 
-                    NextEvent = new RecirculateEvent(batch, Time);
+                    NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
                 }
             }
 

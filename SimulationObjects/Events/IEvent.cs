@@ -12,6 +12,7 @@ namespace SimulationObjects.Events
     {
         IEntity Entity { get; }
         int Time { get; }
+        int CreatedTime { get; }
         bool IsArrival { get; }
         void Conclude();
     }

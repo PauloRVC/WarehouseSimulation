@@ -277,9 +277,13 @@ namespace SimulationObjects.Results
 
             foreach (ProcessType p in TimeInQueue.Keys.Select(x => x.ProcessType).Distinct())
             {
+                /*results.Add(p, new Tuple<double, double>(
+                    TimeInQueue.Where(x => x.Key.ProcessType == p & DisposalTimes.ContainsKey(x.Key)).Select(x => x.Value).Average(),
+                    TimeInQueue.Where(x => x.Key.ProcessType == p & DisposalTimes.ContainsKey(x.Key)).Select(x => x.Value).StandardDeviation()));
+                    */
                 results.Add(p, new Tuple<double, double>(
-                    TimeInQueue.Where(x => x.Key.ProcessType == p).Select(x => x.Value).Average(),
-                    TimeInQueue.Where(x => x.Key.ProcessType == p).Select(x => x.Value).StandardDeviation()));
+                                    TimeInQueue.Where(x => x.Key.ProcessType == p ).Select(x => x.Value).Average(),
+                                    TimeInQueue.Where(x => x.Key.ProcessType == p ).Select(x => x.Value).StandardDeviation()));
             }
 
             return results;
