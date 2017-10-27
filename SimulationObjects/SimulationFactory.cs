@@ -46,6 +46,56 @@ namespace SimulationObjects
         public int CapacityIntervalSize { get; set; }
 
     }
+    public class RequiredDistsSmoothed : RequiredDistsWithOperators
+    {
+        public RequiredDistsSmoothed(FactoryParams factoryParams,
+                                     DistributionSelectionParameters distParams,
+                                     List<Tuple<DateTime, DistributionSelectionParameters>> warmupDays,
+                                     int innerInterval): base(factoryParams,
+                                                              distParams,
+                                                              warmupDays)
+        {
+            int nWarmupDays = warmupDays.Count;
+            int minsInShift = factoryParams.DayLength / 60;
+
+            var data = new WarehouseData();
+
+            PPXSchedule = new Dictionary<int, int>();
+
+            //Add ppxSchedule for warmup days
+            for (int i = 0; i < nWarmupDays; i++)
+            {
+                var warmupDay = warmupDays[i];
+
+                var warmupDistParams = warmupDay.Item2;
+
+                var pSch = data.BuildSmoothedCapacity(warmupDistParams.SelectedDaysForData.First(), warmupDistParams.CapacityIntervalSize, innerInterval);
+
+                factoryParams.Logger.LogPutsPerHour("PPX_Mins_" + i + "_" + warmupDistParams.CapacityIntervalSize, pSch);
+
+                for (int min = 0; min < minsInShift; min += innerInterval)
+                {
+                    int simIntervalStart = min * 60 + factoryParams.DayLength * i;
+                    PPXSchedule.Add(simIntervalStart, pSch[min + factoryParams.StartMin]);
+                }
+
+
+            }
+
+            //Add ppxSchedule for simulation
+            var ppxSch = data.BuildSmoothedCapacity(distParams.SelectedDaysForData.First(), distParams.CapacityIntervalSize, innerInterval);
+
+            factoryParams.Logger.LogPutsPerHour("PPX_Mins_Sim_" + distParams.CapacityIntervalSize, ppxSch);
+
+            for (int min = 0; min <= minsInShift; min += innerInterval)
+            {
+                int simIntervalStart = min * 60 + factoryParams.DayLength * nWarmupDays;
+                PPXSchedule.Add(simIntervalStart, ppxSch[min + factoryParams.StartMin]);
+            }
+
+            factoryParams.Logger.LogPutsPerHour("PPXSchedule_Final", PPXSchedule);
+        }
+    }
     public class RequiredDistsWithOperators: RequiredDistributions
     {
         public Dictionary<int, int> OperatorsPerXSchedule { get; set; }

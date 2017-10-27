@@ -694,6 +694,33 @@ namespace Infrastructure
 
             return RecircVsQSize;
         }
+        public Dictionary<int, int> BuildSmoothedCapacity(DateTime day, int outerInterval, int innerInterval)
+        {
+            var unSmoothed = GetPutsPerZMins(day, outerInterval);
+
+            var smoothed = new Dictionary<int, int>();
+            int nBlocks = outerInterval / innerInterval;
+
+            for(int i = 0; i < unSmoothed.Count; i ++)
+            {
+                int putsPerBlock = unSmoothed[i] / nBlocks;
+
+                for(int j = 0; j < nBlocks-1; j++)
+                {
+                    smoothed.Add(i*outerInterval + j * innerInterval, putsPerBlock);
+                }
+                if(unSmoothed[i]% nBlocks == 0)
+                {
+                    smoothed.Add(i * outerInterval + (nBlocks - 1) * innerInterval, putsPerBlock);
+                }
+                else
+                {
+                    smoothed.Add(i * outerInterval + (nBlocks - 1) * innerInterval, putsPerBlock + (unSmoothed[i] % nBlocks));
+                }
+            }
+
+            return smoothed;
+        }
 
         
     }
