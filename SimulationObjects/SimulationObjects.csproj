@@ -110,6 +110,7 @@
     <Compile Include="Distributions\RealDistributionBuilder.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithConditionalPofRecirc.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithConditionalProbAndOperators.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\PutwallWithConstantPofRecirc.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalDistributions.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalDistsII.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithIntervalQueue.cs" />

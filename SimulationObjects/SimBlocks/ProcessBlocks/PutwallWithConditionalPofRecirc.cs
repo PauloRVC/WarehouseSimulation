@@ -42,23 +42,48 @@ namespace SimulationObjects.SimBlocks
             var ProcessTimeDist = ProcessTimeDists[ProcessTimeDists.Keys.Where(x => x <= Simulation.CurrentTime).Max()];
             var RecircTimeDist = RecircTimeDists[RecircTimeDists.Keys.Where(x => x <= Simulation.CurrentTime).Max()];
 
-            
-            if (PPXSchedule[scheduleIndex] > 0)
+
+            if (batch.CurrentEvent.GetType() == typeof(EndQueueEvent))
             {
-                if (ConditionProbOfRecirc.ContainsKey(Queue.Count))
+                if (PPXSchedule[scheduleIndex] > 0)
                 {
-                    int nObs = ConditionProbOfRecirc[Queue.Count].Item1 + ConditionProbOfRecirc[Queue.Count].Item2;
-                    double pRecirc = (double)ConditionProbOfRecirc[Queue.Count].Item1 / (double)nObs;
-
-                    if(rng.NextDouble() <= pRecirc)
+                    NextEvent = Process(batch);
+                }
+                else
+                {
+                    NextEvent = Enqueue(batch);
+                }
+            }
+            else
+            {
+                if (PPXSchedule[scheduleIndex] > 0)
+                {
+                    if (ConditionProbOfRecirc.ContainsKey(Queue.Count))
                     {
-                        // Recirculate
-                        Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
-                        batch.Destination = this;
+                        int nObs = ConditionProbOfRecirc[Queue.Count].Item1 + ConditionProbOfRecirc[Queue.Count].Item2;
+                        double pRecirc = (double)ConditionProbOfRecirc[Queue.Count].Item1 / (double)nObs;
 
-                        Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
+                        if (rng.NextDouble() <= pRecirc)
+                        {
+                            // Recirculate
+                            Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
+                            batch.Destination = this;
 
-                        NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
+                            Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
+
+                            NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
+                        }
+                        else
+                        {
+                            PPXSchedule[scheduleIndex]--;
+
+                            Time = Simulation.CurrentTime + ProcessTimeDist.DrawNext();
+                            batch.Destination = NextDestination;
+
+                            Results.ReportProcessRealization(batch, Simulation.CurrentTime, Time, new List<IResource>(), this);
+
+                            NextEvent = new EndProcessEvent(Operators.First(), batch, Time, Simulation.CurrentTime);
+                        }
                     }
                     else
                     {
@@ -72,34 +97,38 @@ namespace SimulationObjects.SimBlocks
                         NextEvent = new EndProcessEvent(Operators.First(), batch, Time, Simulation.CurrentTime);
                     }
                 }
-                else
+                else if (Queue.Count < QueueSize)
                 {
-                    PPXSchedule[scheduleIndex]--;
-
-                    Time = Simulation.CurrentTime + ProcessTimeDist.DrawNext();
-                    batch.Destination = NextDestination;
-
-                    Results.ReportProcessRealization(batch, Simulation.CurrentTime, Time, new List<IResource>(), this);
-
-                    NextEvent = new EndProcessEvent(Operators.First(), batch, Time, Simulation.CurrentTime);
-                }
-            }
-            else if (Queue.Count < QueueSize)
-            {
-                if (ConditionProbOfRecirc.ContainsKey(Queue.Count))
-                {
-                    int nObs = ConditionProbOfRecirc[Queue.Count].Item1 + ConditionProbOfRecirc[Queue.Count].Item2;
-                    double pRecirc = ConditionProbOfRecirc[Queue.Count].Item1 / nObs;
-
-                    if (rng.NextDouble() <= pRecirc)
+                    if (ConditionProbOfRecirc.ContainsKey(Queue.Count))
                     {
-                        // Recirculate
-                        Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
-                        batch.Destination = this;
+                        int nObs = ConditionProbOfRecirc[Queue.Count].Item1 + ConditionProbOfRecirc[Queue.Count].Item2;
+                        double pRecirc = ConditionProbOfRecirc[Queue.Count].Item1 / nObs;
 
-                        Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
+                        if (rng.NextDouble() <= pRecirc)
+                        {
+                            // Recirculate
+                            Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
+                            batch.Destination = this;
 
-                        NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
+                            Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
+
+                            NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
+                        }
+                        else
+                        {
+                            if (PPXSchedule.Keys.Any(x => x > Simulation.CurrentTime))
+                                Time = PPXSchedule.Keys.Where(x => x > Simulation.CurrentTime).Min();
+                            else
+                                Time = Simulation.CurrentTime + 1;
+
+                            batch.Destination = this;
+
+                            Queue.Add(batch);
+
+                            Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
+
+                            NextEvent = new EndQueueEvent(DeQueue, batch, Time, Simulation.CurrentTime);
+                        }
                     }
                     else
                     {
@@ -119,30 +148,16 @@ namespace SimulationObjects.SimBlocks
                 }
                 else
                 {
-                    if (PPXSchedule.Keys.Any(x => x > Simulation.CurrentTime))
-                        Time = PPXSchedule.Keys.Where(x => x > Simulation.CurrentTime).Min();
-                    else
-                        Time = Simulation.CurrentTime + 1;
-
+                    // Recirculate
+                    Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
                     batch.Destination = this;
 
-                    Queue.Add(batch);
+                    Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
 
-                    Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
-
-                    NextEvent = new EndQueueEvent(DeQueue, batch, Time, Simulation.CurrentTime);
+                    NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
                 }
             }
-            else
-            {
-                // Recirculate
-                Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
-                batch.Destination = this;
-
-                Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
-
-                NextEvent = new RecirculateEvent(batch, Time, Simulation.CurrentTime);
-            }
+            
 
             Results.ReportQueueSize(Simulation.CurrentTime, Queue.Count);
 

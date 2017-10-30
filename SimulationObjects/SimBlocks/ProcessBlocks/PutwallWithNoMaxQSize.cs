@@ -33,53 +33,7 @@ namespace SimulationObjects.SimBlocks
             ConditionProbOfRecirc = conditionalP;
         }
 
-        protected virtual EndProcessEvent Process(IEntity batch)
-        {
-            int Time;
-            int scheduleIndex = PPXSchedule.Keys.Where(x => x <= Simulation.CurrentTime).Max();
-
-            var ProcessTimeDist = ProcessTimeDists[ProcessTimeDists.Keys.Where(x => x <= Simulation.CurrentTime).Max()];
-
-            PPXSchedule[scheduleIndex]--;
-
-            Time = Simulation.CurrentTime + ProcessTimeDist.DrawNext();
-            batch.Destination = NextDestination;
-
-            Results.ReportProcessRealization(batch, Simulation.CurrentTime, Time, new List<IResource>(), this);
-
-            return new EndProcessEvent(Operators.First(), batch, Time, Simulation.CurrentTime);
-        }
-        protected virtual EndQueueEvent Enqueue(IEntity batch)
-        {
-            int Time;
-            int scheduleIndex = PPXSchedule.Keys.Where(x => x <= Simulation.CurrentTime).Max();
-
-            if (PPXSchedule.Keys.Any(x => x > Simulation.CurrentTime))
-                Time = PPXSchedule.Keys.Where(x => x > Simulation.CurrentTime).Min();
-            else
-                Time = Simulation.CurrentTime + 1;
-
-            batch.Destination = this;
-
-            Queue.Add(batch);
-
-            Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
-
-            return new EndQueueEvent(DeQueue, batch, Time, Simulation.CurrentTime);
-        }
-        protected virtual RecirculateEvent Recirculate(IEntity batch)
-        {
-            int Time;
-            int scheduleIndex = PPXSchedule.Keys.Where(x => x <= Simulation.CurrentTime).Max();
-            var RecircTimeDist = RecircTimeDists[RecircTimeDists.Keys.Where(x => x <= Simulation.CurrentTime).Max()];
-
-            Time = Simulation.CurrentTime + RecircTimeDist.DrawNext();
-            batch.Destination = this;
-
-            Simulation.Results.ReportRecirculation(batch, Simulation.CurrentTime, Time);
-
-            return new RecirculateEvent(batch, Time, Simulation.CurrentTime);
-        }
+       
         public override IEvent GetNextEvent(IEntity batch)
         {
             IEvent NextEvent;

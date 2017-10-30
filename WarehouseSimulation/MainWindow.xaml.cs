@@ -2267,9 +2267,8 @@ namespace WarehouseSimulation
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
             var iterations = Enumerable.Range(1, 20);
-            Parallel.ForEach(iterations, i =>
-            {
-                var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
+
+            var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
                 {
                     //complete distribution
                     //new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,0,0), new TimeSpan(22,0,0)),
@@ -2303,41 +2302,45 @@ namespace WarehouseSimulation
                     new Tuple<TimeSpan, TimeSpan>(new TimeSpan(23,0,0), new TimeSpan(24,0,0)),
                 };
 
-                var breakTimes = Data.FindBreaks(availability[0], 600);
+            var breakTimes = Data.FindBreaks(availability[0], 600);
 
-                var factoryParams = new FactoryParams()
-                {
-                    StartMin = 360,
-                    DayLength = 64800,
-                    QueueSize = 150,
-                    Logger = logger,
-                    NWarmupDays = 1
-                };
+            var factoryParams = new FactoryParams()
+            {
+                StartMin = 360,
+                DayLength = 64800,
+                QueueSize = 150,
+                Logger = logger,
+                NWarmupDays = 1
+            };
 
-                var distParams = new DistributionSelectionParameters()
-                {
-                    SelectedDaysForData = availability,
-                    ArrivalDistributionBreakpoints = intervals,
-                    BreakTimes = breakTimes,
-                    IntervalForOtherDistributions = statsInterval,
-                    CapacityIntervalSize = 30
-                };
+            var distParams = new DistributionSelectionParameters()
+            {
+                SelectedDaysForData = availability,
+                ArrivalDistributionBreakpoints = intervals,
+                BreakTimes = breakTimes,
+                IntervalForOtherDistributions = statsInterval,
+                CapacityIntervalSize = 30
+            };
 
-                DateTime warmupDay = new DateTime(2015, 11, 9);
+            DateTime warmupDay = new DateTime(2015, 11, 9);
 
-                var warmupParams = new DistributionSelectionParameters()
-                {
-                    SelectedDaysForData = new List<DateTime>() { warmupDay },
-                    ArrivalDistributionBreakpoints = intervals,
-                    BreakTimes = breakTimes,
-                    IntervalForOtherDistributions = statsInterval,
-                    CapacityIntervalSize = 30
-                };
+            var warmupParams = new DistributionSelectionParameters()
+            {
+                SelectedDaysForData = new List<DateTime>() { warmupDay },
+                ArrivalDistributionBreakpoints = intervals,
+                BreakTimes = breakTimes,
+                IntervalForOtherDistributions = statsInterval,
+                CapacityIntervalSize = 30
+            };
 
-                var warmupDays = new List<Tuple<DateTime, DistributionSelectionParameters>>()
+            var warmupDays = new List<Tuple<DateTime, DistributionSelectionParameters>>()
                 {
                     new Tuple<DateTime, DistributionSelectionParameters>(warmupDay, warmupParams)
                 };
+
+            Parallel.ForEach(iterations, i =>
+            {
+                
 
                 var sim = SimulationFactory.SimWithSpecificWarmupDay(factoryParams, distParams, warmupDays);
 
