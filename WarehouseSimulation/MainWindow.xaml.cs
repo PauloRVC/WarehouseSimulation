@@ -49,8 +49,30 @@ namespace WarehouseSimulation
             //SpecificQueueNoQueueTime();
             //SimWithOperatorCount();
             //ConsumeAllSim();
-            SimWithSmoothedCapacity();
+            //SimWithSmoothedCapacity();
             //SimWithConstantPOfRecirc();
+            int maxInterval = 500;
+            string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
+            string resultsPath = basePath + "Results.txt";
+            using(var writer = new System.IO.StreamWriter(resultsPath, true))
+            {
+                writer.WriteLine("Arrival Interval \t Number Created \t Number Disposed \t Time in System \t Time in Queue \t Time in Recirc \t Times Recirced \t Time in Put");
+            }
+            for(int i = 5; i <= maxInterval; i++)
+            {
+                
+                var results = IHateLife(i, basePath);
+                using (var writer = new System.IO.StreamWriter(resultsPath, true))
+                {
+                    writer.WriteLine(i + "\t" + results.PutwallStatistics.NumberCreated.Average + "\t" + 
+                        results.PutwallStatistics.NumberDisposed.Average + "\t" + 
+                        results.PutwallStatistics.TimeInSystem.Average + "\t" + 
+                        results.PutwallStatistics.TimeInQueue.Average + "\t" + 
+                        results.PutwallStatistics.TimeRecirculating.Average +"\t" +
+                        results.PutwallStatistics.TimesRecirculated.Average + "\t" +
+                        results.PutwallStatistics.TimeInProcess.Average);
+                }
+            }
         }
         private void SimWithConstantPOfRecirc()
         {
@@ -279,6 +301,256 @@ namespace WarehouseSimulation
             }
 
         }
+        private MetaResults IHateLife(int arrivalInterval, string thePath)
+        {
+            var Data = new WarehouseData();
+
+            var FinalResults = new MetaResults();
+
+            //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            string basePath = thePath + arrivalInterval + @"\";
+            if (!System.IO.Directory.Exists(basePath))
+            {
+                System.IO.Directory.CreateDirectory(basePath);
+            }
+            //string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
+
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,11)
+            };
+
+            var qSizeData = new List<DateTime>()
+            {
+                new DateTime(2015,11,6),
+                new DateTime(2015,11,7),
+                new DateTime(2015, 11,8),
+                new DateTime(2015,11,9),
+                new DateTime(2015,11,10),
+                new DateTime(2015,11,11),
+                new DateTime(2015,11,12),
+                new DateTime(2015,11,13)
+            };
+            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6, 15, 0), new TimeSpan(23, 15, 0));
+
+            var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
+            var recircTimesOverTime = Data.GetItemsInRecircOverTime(qSizeData, availability[0]);
+            var queueSizeOverTime = Data.GetQueueSizeOverTime(qSizeData, availability[0]);
+            var qTimes = Data.GetTimeInQueue(availability[0], statsInterval);
+
+
+
+            using (var writer = new System.IO.StreamWriter(basePath + "InterArrivals_over_time_real.txt"))
+            {
+                writer.WriteLine("Time \t Interarrival Time");
+
+                foreach (var t in arrivalTimesOverTime)
+                {
+                    writer.WriteLine(t.Item1 + "\t" + t.Item2);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "ItemsInRecirc_over_time_real.txt"))
+            {
+                writer.WriteLine("Time of Day (s) \t Items in Reicirculation");
+
+                for (int i = 0; i < recircTimesOverTime.Length; i++)
+                {
+                    writer.WriteLine(i + "\t" + recircTimesOverTime[i]);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "QueueSize_over_time_real.txt"))
+            {
+                writer.WriteLine("Time of Day (s) \t Items in Queue");
+
+                for (int i = 0; i < queueSizeOverTime.Length; i++)
+                {
+                    writer.WriteLine(i + "\t" + queueSizeOverTime[i]);
+                }
+            }
+
+            using (var writer = new System.IO.StreamWriter(basePath + "QTimes.txt"))
+            {
+                writer.WriteLine("Time in Queue");
+
+                foreach (double time in qTimes)
+                {
+                    writer.WriteLine(time);
+                }
+            }
+
+
+
+
+            var logger = new VerboseLogger(basePath);
+            //var logger = new VerboseLogger(@"C:\Users\Daniel\Desktop\SimLog");
+            //var logger = new VerboseLogger(@"C:\Users\Dematic\Desktop\SimLog");
+
+
+
+            //logger.LogDBStats("DBStats2", availability.First(), 600, statsInterval);
+            //logger.LogDBStats("DBStats", availability.First());
+            //logger.LogDBStats("DBStats", availability.First(), 600);
+
+
+            List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
+            var iterations = Enumerable.Range(0, 10);
+
+            var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
+
+            int capacityInterval = 5;
+            int ArrivalInterval = arrivalInterval;
+            int innerInterval = 1;
+
+            var operaterCount = Data.GetOperatorsPerZMins(availability[0], capacityInterval);
+            logger.LogPutsPerHour("Operators_Per_" + capacityInterval + "mins_MinsFromMidnight", operaterCount);
+
+
+
+            for (int i = 6 * 60; i < 24 * 60; i += ArrivalInterval)
+            {
+                if (((double)(i + ArrivalInterval) / 60) == 24)
+                {
+                    intervals.Add(new Tuple<TimeSpan, TimeSpan>(new TimeSpan((int)Math.Floor((double)i / 60), i % 60, 0),
+                    new TimeSpan(23, 59, 59)));
+                }
+                else
+                {
+                    intervals.Add(new Tuple<TimeSpan, TimeSpan>(new TimeSpan((int)Math.Floor((double)i / 60), i % 60, 0),
+                    new TimeSpan((int)Math.Floor((double)(i + ArrivalInterval) / 60), (i + ArrivalInterval) % 60, 0)));
+                }
+
+            }
+
+
+            var breakTimes = Data.FindBreaks(availability[0], 600);
+
+            var factoryParams = new FactoryParams()
+            {
+                StartMin = 375,
+                DayLength = 61200,
+                //DayLength = 64800,
+                Logger = logger,
+                NWarmupDays = 0,
+                InitialNumberInQueue = 52
+                //InitialNumberInQueue = 78
+            };
+
+            var distParams = new DistributionSelectionParameters()
+            {
+                SelectedDaysForData = availability,
+                ArrivalDistributionBreakpoints = intervals,
+                BreakTimes = breakTimes,
+                IntervalForOtherDistributions = statsInterval,
+                CapacityIntervalSize = capacityInterval
+            };
+
+            var pOfRecirc = Data.RecirculationVSQueueSize(availability[0], qSizeData, distParams.IntervalForOtherDistributions);
+
+            using (var writer = new System.IO.StreamWriter(basePath + "ConditionalProbDist.txt"))
+            {
+                writer.WriteLine("Queue Size \t Number of Recirculations Observed \t Number of Lane Entries Observed \t Total \t P(Recirc|QSize)");
+
+                foreach (var p in pOfRecirc.OrderBy(x => x.Key))
+                {
+                    writer.WriteLine(p.Key + "\t" +
+                                     p.Value.Item1 + "\t" +
+                                     p.Value.Item2 + "\t" +
+                                     (p.Value.Item1 + p.Value.Item2) + "\t" +
+                                     ((double)p.Value.Item1 / ((double)p.Value.Item1 + (double)p.Value.Item2)));
+                }
+            }
+
+
+            var warmupDays = new List<Tuple<DateTime, DistributionSelectionParameters>>();
+
+            var allDists = new RequiredDistsSmoothed(factoryParams, distParams, warmupDays, innerInterval);
+
+            var AllDists = allDists.CreateNCopiesWithOperators(10);
+
+
+
+
+
+            Parallel.ForEach(iterations, i =>
+            {
+                var dists = AllDists[i];
+
+                var sim = SimulationFactory.SimWithConditionalPofRecircAndNoMaxQueue(factoryParams, dists, pOfRecirc);
+
+                sim.Run();
+
+
+                logger.LogResults(sim.Results, "Results_" + i, (factoryParams.NWarmupDays + 1) * factoryParams.DayLength);
+
+
+                FinalResults.AddSimResults(sim.Results);
+
+                var t = sim.Results.CalcNumOut();
+
+                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+
+                OutputTimeSeries(i, basePath, sim.Results);
+
+                OutputTimedQueueSize(i, basePath, sim.Results);
+
+                WriteOutTimeInQ(i, basePath, sim.Results);
+
+                WriteOutLeftoverCapacity(i, basePath, sim.Results.LeftOverCapacity);
+            });
+
+
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\p2decarv\Desktop\SimLog\FINALRESULTS.txt"))
+            //using (var writer = new System.IO.StreamWriter(@"C:\Users\Daniel\Desktop\SimLog\FINALRESULTS.txt"))
+            using (var writer = new System.IO.StreamWriter(basePath + "FINALRESULTS.txt"))
+            {
+                foreach (Tuple<int, int> t2 in throughput)
+                {
+                    writer.WriteLine(t2.Item1.ToString() + '\t' + t2.Item2.ToString());
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("Putwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+                writer.WriteLine("Time in System \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.PutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.PutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.PutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Time in Put Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+
+
+                writer.WriteLine();
+                writer.WriteLine("NonPutwall Stats");
+                writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Time in system \t" + FinalResults.NonPutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Time in Queue \t" + FinalResults.NonPutwallStatistics.TimeInQueue.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInQueue.StdDev);
+                writer.WriteLine("Time Recirculating \t" + FinalResults.NonPutwallStatistics.TimeRecirculating.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeRecirculating.StdDev);
+                writer.WriteLine("Times Recirculated \t" + FinalResults.NonPutwallStatistics.TimesRecirculated.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimesRecirculated.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
+
+            }
+
+            return FinalResults;
+        }
         private void SimWithSmoothedCapacity()
         {
             var Data = new WarehouseData();
@@ -291,21 +563,24 @@ namespace WarehouseSimulation
 
             var availability = new List<DateTime>()
             {
-                new DateTime(2015,11,10)
+                new DateTime(2015,11,9)
             };
 
             var qSizeData = new List<DateTime>()
             {
+                new DateTime(2015,11,6),
+                new DateTime(2015,11,7),
+                new DateTime(2015, 11,8),
                 new DateTime(2015,11,9),
                 new DateTime(2015,11,10),
                 new DateTime(2015,11,11),
                 new DateTime(2015,11,12),
                 new DateTime(2015,11,13)
             };
-            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6, 0, 0), new TimeSpan(23, 59, 59));
+            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6,30, 0), new TimeSpan(23, 0, 0));
 
             var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
-            var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
+            var recircTimesOverTime = Data.GetItemsInRecircOverTime(qSizeData, availability[0]);
             var queueSizeOverTime = Data.GetQueueSizeOverTime(qSizeData, availability[0]);
             var qTimes = Data.GetTimeInQueue(availability[0], statsInterval);
 
@@ -366,13 +641,13 @@ namespace WarehouseSimulation
 
 
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
-            var iterations = Enumerable.Range(0, 100);
+            var iterations = Enumerable.Range(0, 10);
 
             var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
 
-            int capacityInterval = 10;
-            int ArrivalInterval = 27;
-            int innerInterval = 2;
+            int capacityInterval = 5;
+            int ArrivalInterval = 17*60;
+            int innerInterval = 1;
 
             var operaterCount = Data.GetOperatorsPerZMins(availability[0], capacityInterval);
             logger.LogPutsPerHour("Operators_Per_" + capacityInterval + "mins_MinsFromMidnight", operaterCount);
@@ -399,13 +674,13 @@ namespace WarehouseSimulation
 
             var factoryParams = new FactoryParams()
             {
-                StartMin = 360,
-                DayLength = 64800,
-                //DayLength = 61200,
+                StartMin = 390,
+                DayLength = 61200 - 1800,
+                //DayLength = 64800,
                 Logger = logger,
                 NWarmupDays = 0,
-                InitialNumberInQueue = 104
-                //InitialNumberInQueue = 134
+                //InitialNumberInQueue = 104
+                InitialNumberInQueue = 132
             };
 
             var distParams = new DistributionSelectionParameters()
@@ -438,7 +713,7 @@ namespace WarehouseSimulation
 
             var allDists = new RequiredDistsSmoothed(factoryParams, distParams, warmupDays, innerInterval);
 
-            var AllDists = allDists.CreateNCopiesWithOperators(100);
+            var AllDists = allDists.CreateNCopiesWithOperators(10);
 
 
 

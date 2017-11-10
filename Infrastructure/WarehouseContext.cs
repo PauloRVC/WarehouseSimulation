@@ -453,6 +453,42 @@ namespace Infrastructure
                 return QueueSize;
             }
         }
+        public int[] GetItemsInRecircOverTime(List<DateTime> data, DateTime day)
+        {
+            using (var db = new WarehouseContext())
+            {
+                var dates = data.Select(x => x.Date).ToList();
+                var ItemsInRecirc = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];
+                var groups = db.BatchScans.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID &&
+                                                   data.Contains(DbFunctions.TruncateTime(x.Timestamp).Value)).
+                                                   GroupBy(x => x.BatchID).Where(x => x.Count() > 1).Select(x => x.OrderBy(y => y.Timestamp));
+
+                var dayStart = new DateTime(day.Year, day.Month, day.Day, 0, 0, 0);
+                var dayEnd = new DateTime(day.Year, day.Month, day.Day, 23, 59, 59);
+                foreach (var group in groups)
+                {
+                    var t1 = group.First().Timestamp;
+                    var t2 = group.Last().Timestamp;
+
+                    if (!(t2 < dayStart | t1 > dayEnd))
+                    {
+                        t1 = new DateTime(Math.Max(t1.Ticks, dayStart.Ticks));
+                        t2 = new DateTime(Math.Min(t2.Ticks, dayEnd.Ticks));
+
+                        int start = (int)t1.TimeOfDay.TotalSeconds;
+                        int end = (int)t2.TimeOfDay.TotalSeconds;
+
+                        for (int i = start; i <= end; i++)
+                        {
+                            ItemsInRecirc[i]++;
+                        }
+                    }
+                        
+                }
+
+                return ItemsInRecirc;
+            }
+        }
         public int[] GetQueueSizeOverTime(List<DateTime> data, DateTime day)
         {
             using (var db = new WarehouseContext())
@@ -465,6 +501,8 @@ namespace Infrastructure
                 {
                     last901.AddRange(LastArrivals(Scanner901, d));
                 }
+
+                last901 = last901.GroupBy(x => x.BatchID).Select(x => x.OrderBy(y => y.Timestamp).Last()).ToList();
 
                 var batchIDs = last901.Select(x => x.BatchID).ToList();
                 
