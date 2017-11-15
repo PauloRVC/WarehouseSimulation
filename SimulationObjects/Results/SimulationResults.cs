@@ -176,9 +176,9 @@ namespace SimulationObjects.Results
 
                 foreach (IEntity e in ArrivalTimes.Keys.Where(x => x.ProcessType == p))
                 {
-                    if (!DisposalTimes.ContainsKey(e))
+                    if (!DisposalTimes.ContainsKey(e) || !ArrivalTimes.ContainsKey(e))
                     {
-                        timeInSystem.Add(EndTime - ArrivalTimes[e]);
+                        //timeInSystem.Add(EndTime - ArrivalTimes[e]);
                     }else
                     {
                         timeInSystem.Add(DisposalTimes[e] - ArrivalTimes[e]);
@@ -277,13 +277,15 @@ namespace SimulationObjects.Results
 
             foreach (ProcessType p in TimeInQueue.Keys.Select(x => x.ProcessType).Distinct())
             {
-                /*results.Add(p, new Tuple<double, double>(
-                    TimeInQueue.Where(x => x.Key.ProcessType == p & DisposalTimes.ContainsKey(x.Key)).Select(x => x.Value).Average(),
-                    TimeInQueue.Where(x => x.Key.ProcessType == p & DisposalTimes.ContainsKey(x.Key)).Select(x => x.Value).StandardDeviation()));
-                    */
+                results.Add(p, new Tuple<double, double>(
+                    TimeInQueue.Where(x => x.Key.ProcessType == p & DisposalTimes.ContainsKey(x.Key) & ArrivalTimes.ContainsKey(x.Key)).Select(x => x.Value).Average(),
+                    TimeInQueue.Where(x => x.Key.ProcessType == p & DisposalTimes.ContainsKey(x.Key) & ArrivalTimes.ContainsKey(x.Key)).Select(x => x.Value).StandardDeviation()));
+                    
+                    /*
                 results.Add(p, new Tuple<double, double>(
                                     TimeInQueue.Where(x => x.Key.ProcessType == p ).Select(x => x.Value).Average(),
                                     TimeInQueue.Where(x => x.Key.ProcessType == p ).Select(x => x.Value).StandardDeviation()));
+                                    */
             }
 
             return results;

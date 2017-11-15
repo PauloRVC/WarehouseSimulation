@@ -4,6 +4,8 @@ using SimulationObjects.Distributions;
 using SimulationObjects.Resources;
 using SimulationObjects.Results;
 using SimulationObjects.SimBlocks;
+using SimulationObjects.SimBlocks.ArrivalBlocks;
+using SimulationObjects.SimBlocks.ProcessBlocks;
 using SimulationObjects.Utils;
 using System;
 using System.Collections.Generic;
@@ -40,6 +42,7 @@ namespace SimulationObjects
     public class DistributionSelectionParameters
     {
         public List<DateTime> SelectedDaysForData { get; set; }
+        public List<DateTime> QueueSizeData { get; set; }
         public List<Tuple<TimeSpan, TimeSpan>> ArrivalDistributionBreakpoints { get; set; }
         public List<Tuple<DateTime, DateTime>> BreakTimes { get; set; }
         public Tuple<TimeSpan, TimeSpan> IntervalForOtherDistributions { get; set; }
@@ -96,7 +99,7 @@ namespace SimulationObjects
             factoryParams.Logger.LogPutsPerHour("PPXSchedule_Final", PPXSchedule);
         }
     }
-    public class RequiredDistsWithOperators: RequiredDistributions
+    public class RequiredDistsWithOperators : RequiredDistributions
     {
         public Dictionary<int, int> OperatorsPerXSchedule { get; set; }
 
@@ -106,7 +109,7 @@ namespace SimulationObjects
         }
         public RequiredDistsWithOperators(FactoryParams factoryParams,
                                      DistributionSelectionParameters distParams,
-                                     List<Tuple<DateTime, DistributionSelectionParameters>> warmupDays): base(factoryParams,
+                                     List<Tuple<DateTime, DistributionSelectionParameters>> warmupDays) : base(factoryParams,
                                                                                                               distParams,
                                                                                                               warmupDays)
         {
@@ -116,7 +119,7 @@ namespace SimulationObjects
             //var distBuilder = new NewDistBuilder();
 
             var data = new WarehouseData();
-            
+
 
             OperatorsPerXSchedule = new Dictionary<int, int>();
 
@@ -182,7 +185,116 @@ namespace SimulationObjects
                 OperatorsPerXSchedule = this.OperatorsPerXSchedule
             };
         }
-        
+
+    }
+    public class MultiArrivalDistributions
+    {
+        public IDistribution<int> ProcessTimeDist { get; set; }
+        public IDistribution<int> RecircTimeDist { get; set; }
+        public Dictionary<int, Tuple<int, int>> ConditionalRecircProbabilities { get; set; }
+        public LocationDist DestinationDist { get; set; }
+        public IDistribution<InterarrivalBatchSize> MultiArrivalDist { get; set; }
+        public Dictionary<int, int> PPXSchedule { get; set; }
+        public List<Tuple<int, int>> BreakTimes { get; set; }
+
+        public List<MultiArrivalDistributions> CreateNCopies(int N)
+        {
+            var copies = new List<MultiArrivalDistributions>();
+            for (int i = 1; i <= N; i++)
+            {
+                copies.Add(this.Copy());
+            }
+            return copies;
+        }
+        private MultiArrivalDistributions Copy()
+        {
+            var ppxSchedule = new Dictionary<int, int>();
+            foreach (KeyValuePair<int, int> p in PPXSchedule)
+            {
+                ppxSchedule.Add(p.Key, p.Value);
+            }
+
+            return new MultiArrivalDistributions()
+            {
+                PPXSchedule = ppxSchedule,
+                ProcessTimeDist = this.ProcessTimeDist,
+                RecircTimeDist = this.RecircTimeDist,
+                ConditionalRecircProbabilities = this.ConditionalRecircProbabilities,
+                DestinationDist = this.DestinationDist,
+                MultiArrivalDist = this.MultiArrivalDist,
+                BreakTimes = this.BreakTimes,
+            };
+        }
+        protected MultiArrivalDistributions()
+        {
+
+        }
+        public MultiArrivalDistributions(FactoryParams factoryParams,
+                                     DistributionSelectionParameters distParams,
+                                     int innerInterval)
+        {
+            int minsInShift = factoryParams.DayLength / 60;
+
+            var distBuilder = new NewDistBuilder();
+
+            distBuilder.Logger = factoryParams.Logger;
+
+            PPXSchedule = new Dictionary<int, int>();
+
+            var Data = new WarehouseData();
+
+            var ppxSch = Data.BuildSmoothedCapacity(distParams.SelectedDaysForData.First(), distParams.CapacityIntervalSize, innerInterval);
+
+            factoryParams.Logger.LogPutsPerHour("PPX_Mins_Sim_" + distParams.CapacityIntervalSize, ppxSch);
+
+            for (int min = 0; min <= minsInShift; min += innerInterval)
+            {
+                int simIntervalStart = min * 60;
+                PPXSchedule.Add(simIntervalStart, ppxSch[min + factoryParams.StartMin]);
+            }
+
+            factoryParams.Logger.LogPutsPerHour("PPXSchedule_Final", PPXSchedule);
+            
+            ProcessTimeDist = distBuilder.
+                         BuildProcessTimeDist(distParams.SelectedDaysForData,
+                                              factoryParams.ProcessTimeAnomolyLimit,
+                                              distParams.IntervalForOtherDistributions);
+            DestinationDist = distBuilder.
+                           BuildDestinationDist(distParams.SelectedDaysForData,
+                                                distParams.IntervalForOtherDistributions);
+            RecircTimeDist = distBuilder.BuildRecircTimeDist(distParams.SelectedDaysForData,
+                                                             factoryParams.RecircAnomolyLimit,
+                                                             distParams.IntervalForOtherDistributions);
+
+            BreakTimes = new List<Tuple<int, int>>();
+
+            foreach (var brk in distParams.BreakTimes)
+            {
+                if (brk.Item1.TimeOfDay.TotalMinutes > factoryParams.StartMin &
+                       brk.Item1.TimeOfDay.TotalMinutes < factoryParams.EndMin)
+                {
+                    int t1 = ((int)brk.Item1.TimeOfDay.TotalSeconds - factoryParams.StartMin * 60);
+                    int t2 = (int)brk.Item2.TimeOfDay.TotalSeconds - factoryParams.StartMin * 60;
+                    t2 = Math.Min(t2, factoryParams.DayLength);
+
+
+                    BreakTimes.Add(new Tuple<int, int>(t1, t2));
+                }
+
+            }
+            
+
+            MultiArrivalDist = distBuilder.BuildInterarrivalBatchSizeDist (distParams.SelectedDaysForData,
+                                                                          factoryParams.ArrivalAnomolyLimit,
+                                                                          distParams.IntervalForOtherDistributions);
+            
+
+            ConditionalRecircProbabilities = Data.RecirculationVSQueueSize(distParams.SelectedDaysForData.First(), 
+                                                                           distParams.QueueSizeData, 
+                                                                           distParams.IntervalForOtherDistributions);
+
+            Data = null;
+        }
     }
     public class RequiredDistributions
     {
@@ -398,6 +510,42 @@ namespace SimulationObjects
     }
     public static class SimulationFactory
     {
+        public static MultiArrivalSimulation MultiArrivalSim(FactoryParams factoryParams,
+                                                             MultiArrivalDistributions dists)
+        {
+            var results = new SimulationResults(factoryParams.DayLength);
+
+            MultiArrivalSimulation simulation = new MultiArrivalSimulation(results, factoryParams.DayLength);
+
+            IDestinationBlock disposalBlock = new DisposalBlock(simulation);
+
+            var data = new WarehouseData();
+
+            var P06 = new SimplePutwall(dists.ProcessTimeDist,
+                                        dists.RecircTimeDist,
+                                        simulation,
+                                        disposalBlock,
+                                        dists.PPXSchedule,
+                                        dists.ConditionalRecircProbabilities);
+
+            var deQueueEvents = P06.InitializeQueue(factoryParams.InitialNumberInQueue);
+
+
+
+
+            var locationDict = new Dictionary<int, IDestinationBlock>();
+            locationDict.Add(data.P06.LocationID, P06);
+
+            var destinationDist = new LocationWrapper(dists.DestinationDist, locationDict, simulation, disposalBlock);
+
+            var ArrivalBlock = new MultiArrivalBlock(dists.MultiArrivalDist, destinationDist, P06, dists.BreakTimes, simulation);
+
+            var firstArrival = ArrivalBlock.GetNextEvent();
+
+            simulation.Initialize(ArrivalBlock, firstArrival, deQueueEvents);
+
+            return simulation;
+        }
         public static Simulation SimWithConstantPOfRecirc(FactoryParams factoryParams,
                                                             RequiredDistributions dists,
                                                            double pOfRecirc)

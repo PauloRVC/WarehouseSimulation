@@ -1,44 +1,32 @@
 ﻿using SimulationObjects.Events;
 using SimulationObjects.Results;
-using SimulationObjects.SimBlocks;
+using SimulationObjects.SimBlocks.ArrivalBlocks;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SimulationObjects
 {
-    public class Simulation
+    public class MultiArrivalSimulation: Simulation
     {
-        protected List<IEvent> EventQueue;
 
-        private IArrivalBlock ArrivalBlock;
-
-        public int EndTime { get; protected set; }
-
-        public int CurrentTime { get; protected set; }
-        public SimulationResults Results { get; protected set; }
-        public Simulation(int endTime)
+        private MultiArrivalBlock ArrivalBlock;
+        
+        public MultiArrivalSimulation(int endTime):base(endTime)
         {
-            CurrentTime = 0;
-            EndTime = endTime;
-            Results = new SimulationResults(endTime);
         }
-        public Simulation(SimulationResults results, int endTime)
+        public MultiArrivalSimulation(SimulationResults results, int endTime):base(results, endTime)
         {
-            CurrentTime = 0;
-            EndTime = endTime;
-            Results = results;
         }
-        public virtual void Initialize(IArrivalBlock arrivalBlock, IEvent firstArrival)
+        public void Initialize(MultiArrivalBlock arrivalBlock, IEvent firstArrival)
         {
             ArrivalBlock = arrivalBlock;
-            
+
             EventQueue = new List<IEvent>() { firstArrival };
         }
-        public virtual void Initialize(IArrivalBlock arrivalBlock, IEvent firstArrival, List<IEvent> eventQueue)
+        public void Initialize(MultiArrivalBlock arrivalBlock, IEvent firstArrival, List<IEvent> eventQueue)
         {
             ArrivalBlock = arrivalBlock;
 
@@ -48,7 +36,7 @@ namespace SimulationObjects
 
             EventQueue = EventQueue.OrderBy(x => x.Time).ToList();
         }
-        public virtual SimulationResults Run()
+        public override SimulationResults Run()
         {
 
             int iterCount = 0;
@@ -57,19 +45,34 @@ namespace SimulationObjects
                 var newEvent = EventQueue.First();
                 EventQueue.Remove(newEvent);
                 CurrentTime = newEvent.Time;
-                
-                var nextEvent = newEvent.Entity.Destination.GetNextEvent(newEvent.Entity);
 
-                if(nextEvent != null)
-                    EventQueue.Add(nextEvent);
+                IEvent nextEvent;
 
                 if (newEvent.IsArrival)
                 {
+                    var multiArrival = (MultiArrival)newEvent;
+
+                    foreach(Arrival a in multiArrival.Arrivals)
+                    {
+                        nextEvent = a.Entity.Destination.GetNextEvent(a.Entity);
+
+                        if (nextEvent != null)
+                            EventQueue.Add(nextEvent);
+                    }
+
                     nextEvent = ArrivalBlock.GetNextEvent();
 
                     if (nextEvent != null)
                         EventQueue.Add(nextEvent);
                 }
+                else
+                {
+                    nextEvent = newEvent.Entity.Destination.GetNextEvent(newEvent.Entity);
+
+                    if (nextEvent != null)
+                        EventQueue.Add(nextEvent);
+                }
+
                 newEvent.Conclude();
                 EventQueue = EventQueue.OrderBy(x => x.Time).ThenBy(x => x.CreatedTime).ToList();
                 iterCount++;

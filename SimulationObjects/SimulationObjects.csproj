@@ -71,12 +71,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Distributions\JointInterarrivalDist.cs" />
     <Compile Include="Distributions\NewDistBuilder.cs" />
     <Compile Include="Entities\IEntity.cs" />
     <Compile Include="Events\Arrival.cs" />
     <Compile Include="Events\EndQueueEvent.cs" />
+    <Compile Include="Events\MultiArrival.cs" />
     <Compile Include="Events\RecirculateEvent.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="MultiArrivalSimulation.cs" />
     <Compile Include="Resources\IResource.cs" />
     <Compile Include="Results\EntityStaticsWithWarmup.cs" />
     <Compile Include="Results\EntityStatistics.cs" />
@@ -92,6 +95,7 @@
     <Compile Include="SimBlocks\ArrivalBlocks\InterarrivalBlock2.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\InterarrivalBlockWithBreaks.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\IntervalArrivalBlock.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\MultiArrivalBlock.cs" />
     <Compile Include="SimBlocks\DisposalBlock.cs" />
     <Compile Include="Distributions\EmpiricalDist.cs" />
     <Compile Include="Events\EndProcessEvent.cs" />
@@ -119,6 +123,7 @@
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHSchedule.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHScheduleAndOperators.cs" />
     <Compile Include="SimBlocks\ProcessBlocks\PutwallWithPPHScheduleAndTimeInQ.cs" />
+    <Compile Include="SimBlocks\ProcessBlocks\SimplePutwall.cs" />
     <Compile Include="SimBlocks\SimBlock.cs" />
     <Compile Include="Simulation.cs" />
     <Compile Include="SimulationFactory.cs" />
