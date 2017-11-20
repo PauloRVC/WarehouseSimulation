@@ -56,8 +56,14 @@ namespace SimulationObjects
                     {
                         nextEvent = a.Entity.Destination.GetNextEvent(a.Entity);
 
+                        
+
                         if (nextEvent != null)
                             EventQueue.Add(nextEvent);
+                    }
+                    for(int i = 1; i < multiArrival.Arrivals.Count; i++)
+                    {
+                        Results.ReportInterarrivalTime(CurrentTime, 0);
                     }
 
                     nextEvent = ArrivalBlock.GetNextEvent();

@@ -54,7 +54,8 @@ namespace WarehouseSimulation
             //int maxInterval = 500;
 
             ////string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
-            string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
+            ////string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
+            string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
 
             //string resultsPath = basePath + "Results.txt";
             //using(var writer = new System.IO.StreamWriter(resultsPath, true))
@@ -87,7 +88,7 @@ namespace WarehouseSimulation
 
             var availability = new List<DateTime>()
             {
-                new DateTime(2015,11,10)
+                new DateTime(2015,11,13)
             };
 
             var qSizeData = new List<DateTime>()
@@ -98,7 +99,7 @@ namespace WarehouseSimulation
                 new DateTime(2015,11,12),
                 new DateTime(2015,11,13)
             };
-            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(8, 0, 0), new TimeSpan(16, 0, 0));
+            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6, 15, 0), new TimeSpan(23, 15, 0));
 
             var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
             var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
@@ -165,8 +166,8 @@ namespace WarehouseSimulation
 
             var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
 
-            int capacityInterval = 30;
-            int innerInterval = 5;
+            int capacityInterval = 5;
+            int innerInterval = 1;
 
             var operaterCount = Data.GetOperatorsPerZMins(availability[0], capacityInterval);
             logger.LogPutsPerHour("Operators_Per_" + capacityInterval + "mins_MinsFromMidnight", operaterCount);
@@ -176,12 +177,12 @@ namespace WarehouseSimulation
 
             var factoryParams = new FactoryParams()
             {
-                StartMin = 480,
+                StartMin = 375,
                 //DayLength = 59400,
-                DayLength = 28800,
+                DayLength = 61200,
                 Logger = logger,
                 NWarmupDays = 0,
-                InitialNumberInQueue = 82
+                InitialNumberInQueue = 134
                 //InitialNumberInQueue = 51
             };
 
@@ -244,38 +245,40 @@ namespace WarehouseSimulation
                 writer.WriteLine();
                 writer.WriteLine("Putwall Stats");
                 writer.WriteLine("Property \t Average \t StdDev");
-                writer.WriteLine("Time in system \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
-                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);
-                writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
-                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+                writer.WriteLine("Time in System \t" + FinalResults.PutwallStatistics.TimeInSystem.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInSystem.StdDev);                
                 writer.WriteLine("Time in Queue \t" + FinalResults.PutwallStatistics.TimeInQueue.Average + "\t" +
                     FinalResults.PutwallStatistics.TimeInQueue.StdDev);
                 writer.WriteLine("Time Recirculating \t" + FinalResults.PutwallStatistics.TimeRecirculating.Average + "\t" +
                     FinalResults.PutwallStatistics.TimeRecirculating.StdDev);
                 writer.WriteLine("Times Recirculated \t" + FinalResults.PutwallStatistics.TimesRecirculated.Average + "\t" +
                     FinalResults.PutwallStatistics.TimesRecirculated.StdDev);
-                writer.WriteLine("Number Created \t" + FinalResults.PutwallStatistics.NumberCreated.Average + "\t" +
-                   FinalResults.PutwallStatistics.NumberCreated.StdDev);
-                writer.WriteLine("Number Disposed \t" + FinalResults.PutwallStatistics.NumberDisposed.Average + "\t" +
-                  FinalResults.PutwallStatistics.NumberDisposed.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.PutwallStatistics.TimeInProcess.StdDev);
+
 
                 writer.WriteLine();
                 writer.WriteLine("NonPutwall Stats");
                 writer.WriteLine("Property \t Average \t StdDev");
+                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
+                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
+                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
+                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
                 writer.WriteLine("Time in system \t" + FinalResults.NonPutwallStatistics.TimeInSystem.Average + "\t" +
-                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);
-                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
-                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+                    FinalResults.NonPutwallStatistics.TimeInSystem.StdDev);                
                 writer.WriteLine("Time in Queue \t" + FinalResults.NonPutwallStatistics.TimeInQueue.Average + "\t" +
                     FinalResults.NonPutwallStatistics.TimeInQueue.StdDev);
                 writer.WriteLine("Time Recirculating \t" + FinalResults.NonPutwallStatistics.TimeRecirculating.Average + "\t" +
                     FinalResults.NonPutwallStatistics.TimeRecirculating.StdDev);
                 writer.WriteLine("Times Recirculated \t" + FinalResults.NonPutwallStatistics.TimesRecirculated.Average + "\t" +
                     FinalResults.NonPutwallStatistics.TimesRecirculated.StdDev);
-                writer.WriteLine("Number Created \t" + FinalResults.NonPutwallStatistics.NumberCreated.Average + "\t" +
-                   FinalResults.NonPutwallStatistics.NumberCreated.StdDev);
-                writer.WriteLine("Number Disposed \t" + FinalResults.NonPutwallStatistics.NumberDisposed.Average + "\t" +
-                  FinalResults.NonPutwallStatistics.NumberDisposed.StdDev);
+                writer.WriteLine("Time in Process \t" + FinalResults.NonPutwallStatistics.TimeInProcess.Average + "\t" +
+                    FinalResults.NonPutwallStatistics.TimeInProcess.StdDev);
+
 
             }
         }
