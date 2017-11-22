@@ -54,8 +54,8 @@ namespace WarehouseSimulation
             //int maxInterval = 500;
 
             ////string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
-            ////string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
-            string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
+            string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
+            //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
 
             //string resultsPath = basePath + "Results.txt";
             //using(var writer = new System.IO.StreamWriter(resultsPath, true))
@@ -82,13 +82,14 @@ namespace WarehouseSimulation
         }
         private void MultiArrivalSim(string basePath)
         {
-            var Data = new WarehouseData();
+            var dType = WarehouseDataType.PutwallOnlyData;
+            var Data = new WarehouseData(dType);
 
             var FinalResults = new MetaResults();
 
             var availability = new List<DateTime>()
             {
-                new DateTime(2015,11,13)
+                new DateTime(2015,11,10)
             };
 
             var qSizeData = new List<DateTime>()
@@ -99,7 +100,7 @@ namespace WarehouseSimulation
                 new DateTime(2015,11,12),
                 new DateTime(2015,11,13)
             };
-            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(6, 15, 0), new TimeSpan(23, 15, 0));
+            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7, 0 , 0), new TimeSpan(23, 0, 0));
 
             var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
             var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
@@ -155,19 +156,19 @@ namespace WarehouseSimulation
 
 
 
-            logger.LogDBStats("DBStats2", availability.First(), 600, statsInterval);
+            logger.LogDBStats("DBStats2", availability.First(), 600, statsInterval, dType);
             //logger.LogDBStats("DBStats", availability.First());
             //logger.LogDBStats("DBStats", availability.First(), 600);
 
 
-            int nIterations = 10;
+            int nIterations = 100;
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
             var iterations = Enumerable.Range(0, nIterations);
 
             var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
 
-            int capacityInterval = 5;
-            int innerInterval = 1;
+            int capacityInterval = 10;
+            int innerInterval = 5;
 
             var operaterCount = Data.GetOperatorsPerZMins(availability[0], capacityInterval);
             logger.LogPutsPerHour("Operators_Per_" + capacityInterval + "mins_MinsFromMidnight", operaterCount);
@@ -177,12 +178,12 @@ namespace WarehouseSimulation
 
             var factoryParams = new FactoryParams()
             {
-                StartMin = 375,
+                StartMin = 420,
                 //DayLength = 59400,
-                DayLength = 61200,
+                DayLength = 57600,
                 Logger = logger,
                 NWarmupDays = 0,
-                InitialNumberInQueue = 134
+                InitialNumberInQueue = queueSizeOverTime[420 * 60]
                 //InitialNumberInQueue = 51
             };
 
@@ -199,7 +200,7 @@ namespace WarehouseSimulation
 
             
 
-            var allDists = new MultiArrivalDistributions(factoryParams, distParams, innerInterval);
+            var allDists = new MultiArrivalDistributions(factoryParams, distParams, innerInterval, dType);
 
             var AllDists = allDists.CreateNCopies(nIterations);
 
@@ -211,7 +212,7 @@ namespace WarehouseSimulation
             {
                 var dists = AllDists[i];
 
-                var sim = SimulationFactory.MultiArrivalSim(factoryParams, dists);
+                var sim = SimulationFactory.MultiArrivalSim(factoryParams, dists, dType);
 
                 sim.Run();
 
@@ -223,7 +224,15 @@ namespace WarehouseSimulation
 
                 var t = sim.Results.CalcNumOut();
 
-                throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+                if (t.ContainsKey(ProcessType.NonPutwall))
+                {
+                    throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], t[ProcessType.NonPutwall]));
+                }
+                else
+                {
+                    throughput.Add(new Tuple<int, int>(t[ProcessType.Putwall], 0));
+                }
+                
 
                 OutputTimeSeries(i, basePath, sim.Results);
 
@@ -260,7 +269,7 @@ namespace WarehouseSimulation
                 writer.WriteLine("Time in Process \t" + FinalResults.PutwallStatistics.TimeInProcess.Average + "\t" +
                     FinalResults.PutwallStatistics.TimeInProcess.StdDev);
 
-
+                
                 writer.WriteLine();
                 writer.WriteLine("NonPutwall Stats");
                 writer.WriteLine("Property \t Average \t StdDev");

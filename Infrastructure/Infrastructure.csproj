@@ -71,8 +71,10 @@
     <Compile Include="Models\Location.cs" />
     <Compile Include="NullLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PutwallOnlyData.cs" />
     <Compile Include="SystemStats.cs" />
     <Compile Include="WarehouseContext.cs" />
+    <Compile Include="WarehouseData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

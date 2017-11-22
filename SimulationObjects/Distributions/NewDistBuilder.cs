@@ -11,7 +11,7 @@ namespace SimulationObjects.Distributions
 {
     public class NewDistBuilder
     {
-        private WarehouseData data = new WarehouseData();
+        private WarehouseData data;
 
         private ILogger logger;
 
@@ -27,6 +27,12 @@ namespace SimulationObjects.Distributions
 
         public NewDistBuilder()
         {
+            data = new WarehouseData();
+            Logger = new NullLogger();
+        }
+        public NewDistBuilder(WarehouseDataType wDataType)
+        {
+            data = new WarehouseData(wDataType);
             Logger = new NullLogger();
         }
         public List<IDistribution<int>>BuildProcessTimeDists(List<DateTime> selectedDays, int anomolyLimit, List<Tuple<TimeSpan, TimeSpan>> periods)

@@ -22,6 +22,7 @@ namespace SimulationObjects.SimBlocks.ProcessBlocks
         protected IDestinationBlock NextDestination;
 
         protected List<IEntity> Queue = new List<IEntity>();
+        protected Dictionary<int, int> OrderInQ;
 
 
         public SimplePutwall(IDistribution<int> processTimeDist,
@@ -38,6 +39,12 @@ namespace SimulationObjects.SimBlocks.ProcessBlocks
             NextDestination = nextDestination;
             PPXSchedule = pPXSchedule;
             Simulation.Results.LeftOverCapacity = PPXSchedule;
+
+            OrderInQ = new Dictionary<int, int>();
+            foreach(var p in PPXSchedule)
+            {
+                OrderInQ.Add(p.Key, int.MinValue);
+            }
         }
 
 
@@ -126,12 +133,14 @@ namespace SimulationObjects.SimBlocks.ProcessBlocks
                 Time = Simulation.CurrentTime + 1;
 
             batch.Destination = this;
+            
 
             Queue.Add(batch);
 
             Simulation.Results.ReportQueueTime(batch, Simulation.CurrentTime, Time);
 
-            return new EndQueueEvent(DeQueue, batch, Time, Simulation.CurrentTime);
+            OrderInQ[scheduleIndex]++;
+            return new EndQueueEvent(DeQueue, batch, Time, OrderInQ[scheduleIndex]);
         }
         protected virtual RecirculateEvent Recirculate(IEntity batch)
         {
@@ -162,7 +171,7 @@ namespace SimulationObjects.SimBlocks.ProcessBlocks
 
                 //Results.ReportArrival(batch, 0);
 
-                var newEvent = new EndQueueEvent(DeQueue, batch, time, Simulation.CurrentTime);
+                var newEvent = new EndQueueEvent(DeQueue, batch, time, -1);
 
                 batch.CurrentEvent = newEvent;
 

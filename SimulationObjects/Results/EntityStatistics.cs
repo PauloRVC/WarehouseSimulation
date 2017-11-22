@@ -25,13 +25,16 @@ namespace SimulationObjects.Results
         
         public virtual void AddObservations(ISimResults simResults)
         {
-            TimeInSystem.AddObservation(simResults.CalcEntityTimeInSystemStats()[EntityType].Item1);
-            TimeInProcess.AddObservation(simResults.CalcEntityTimeInProcessStats()[EntityType].Item1);
-            TimeRecirculating.AddObservation(simResults.CalcRecirculationTimeStats()[EntityType].Item1);
-            TimesRecirculated.AddObservation(simResults.CalcTimesRecirculatedStats()[EntityType].Item1);
-            TimeInQueue.AddObservation(simResults.CalcQueueTimes()[EntityType].Item1);
-            NumberCreated.AddObservation(simResults.CalcNumIn()[EntityType]);
-            NumberDisposed.AddObservation(simResults.CalcNumOut()[EntityType]);
+            if (simResults.CalcEntityTimeInSystemStats().ContainsKey(EntityType))
+            {
+                TimeInSystem.AddObservation(simResults.CalcEntityTimeInSystemStats()[EntityType].Item1);
+                TimeInProcess.AddObservation(simResults.CalcEntityTimeInProcessStats()[EntityType].Item1);
+                TimeRecirculating.AddObservation(simResults.CalcRecirculationTimeStats()[EntityType].Item1);
+                TimesRecirculated.AddObservation(simResults.CalcTimesRecirculatedStats()[EntityType].Item1);
+                TimeInQueue.AddObservation(simResults.CalcQueueTimes()[EntityType].Item1);
+                NumberCreated.AddObservation(simResults.CalcNumIn()[EntityType]);
+                NumberDisposed.AddObservation(simResults.CalcNumOut()[EntityType]);
+            }
         }
         
     }

@@ -214,6 +214,12 @@ namespace SimulationObjects.Utils
 
             WriteDBStatsToFile(name, dbStats);
         }
+        public void LogDBStats(string name, DateTime day, double anomolyLimit, Tuple<TimeSpan, TimeSpan> interval, WarehouseDataType wDataType)
+        {
+            var dbStats = new SystemStats(day, anomolyLimit, interval, this, wDataType);
+
+            WriteDBStatsToFile(name, dbStats);
+        }
         private void WriteDBStatsToFile(string name, SystemStats dbStats)
         {
             name += ".txt";

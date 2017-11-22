@@ -86,6 +86,7 @@
     <Compile Include="Results\ISimResults.cs" />
     <Compile Include="Results\MetaResults.cs" />
     <Compile Include="Results\MetaResultsWithWarmup.cs" />
+    <Compile Include="Results\PutwallOnlyResults.cs" />
     <Compile Include="Results\ResultsWithWarmup.cs" />
     <Compile Include="Results\Statistic.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\ArrivalBlock.cs" />

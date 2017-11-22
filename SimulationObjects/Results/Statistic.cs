@@ -8,8 +8,8 @@ namespace SimulationObjects.Results
 {
     public class Statistic
     {
-        public double Average { get { return Observations.Average(); } }
-        public double StdDev { get { return Observations.StandardDeviation(); } }
+        public double Average { get { return Observations.Count> 0 ? Observations.Average(): 0; } }
+        public double StdDev { get { return Observations.Count > 0 ? Observations.StandardDeviation() : 0; } }
         public List<double> Observations { get; private set; }
 
         public Statistic(List<double> observations)

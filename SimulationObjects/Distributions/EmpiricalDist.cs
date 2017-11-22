@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Accord.Statistics.Distributions.Univariate;
 using SimulationObjects.SimBlocks;
 using Infrastructure.Models;
+using Infrastructure;
 
 namespace SimulationObjects.Distributions
 {
@@ -89,6 +90,38 @@ namespace SimulationObjects.Distributions
 
                 }
             }
+        }
+        public LocationWrapper(LocationDist locationDist,
+                               Dictionary<int, IDestinationBlock> map,
+                               Simulation simulation,
+                               IDestinationBlock nextDest,
+                               WarehouseDataType wDataType)
+        {
+            LocationDist = locationDist;
+            Map = map;
+            switch (wDataType)
+            {
+                case WarehouseDataType.AllData:
+                    foreach (int l in locationDist.Mapping.Values.Select(x => x.LocationID).Distinct())
+                    {
+                        if (!map.Keys.Any(x => x == l))
+                        {
+                            map.Add(l, new NonPutwallLane(simulation, nextDest));
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    break;
+
+                case WarehouseDataType.PutwallOnlyData:
+                    LocationDist = new LocationDist(new List<Tuple<double, Location>>() { new Tuple<double, Location>(1, locationDist.Mapping.Where(x => x.Value.ScannerIndicator == "P06").First().Value) });
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
         }
         public IDestinationBlock DrawNext()
         {

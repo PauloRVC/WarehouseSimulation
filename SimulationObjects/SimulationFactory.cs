@@ -231,17 +231,18 @@ namespace SimulationObjects
         }
         public MultiArrivalDistributions(FactoryParams factoryParams,
                                      DistributionSelectionParameters distParams,
-                                     int innerInterval)
+                                     int innerInterval,
+                                     WarehouseDataType wDataType)
         {
             int minsInShift = factoryParams.DayLength / 60;
 
-            var distBuilder = new NewDistBuilder();
+            var distBuilder = new NewDistBuilder(wDataType);
 
             distBuilder.Logger = factoryParams.Logger;
 
             PPXSchedule = new Dictionary<int, int>();
 
-            var Data = new WarehouseData();
+            var Data = new WarehouseData(wDataType);
 
             var ppxSch = Data.BuildSmoothedCapacity(distParams.SelectedDaysForData.First(), distParams.CapacityIntervalSize, innerInterval);
 
@@ -511,7 +512,8 @@ namespace SimulationObjects
     public static class SimulationFactory
     {
         public static MultiArrivalSimulation MultiArrivalSim(FactoryParams factoryParams,
-                                                             MultiArrivalDistributions dists)
+                                                             MultiArrivalDistributions dists, 
+                                                             WarehouseDataType wDataType)
         {
             var results = new SimulationResults(factoryParams.DayLength);
 
@@ -519,7 +521,7 @@ namespace SimulationObjects
 
             IDestinationBlock disposalBlock = new DisposalBlock(simulation);
 
-            var data = new WarehouseData();
+            var data = new WarehouseData(wDataType);
 
             var P06 = new SimplePutwall(dists.ProcessTimeDist,
                                         dists.RecircTimeDist,
@@ -536,7 +538,7 @@ namespace SimulationObjects
             var locationDict = new Dictionary<int, IDestinationBlock>();
             locationDict.Add(data.P06.LocationID, P06);
 
-            var destinationDist = new LocationWrapper(dists.DestinationDist, locationDict, simulation, disposalBlock);
+            var destinationDist = new LocationWrapper(dists.DestinationDist, locationDict, simulation, disposalBlock, wDataType);
 
             var ArrivalBlock = new MultiArrivalBlock(dists.MultiArrivalDist, destinationDist, P06, dists.BreakTimes, simulation);
 
