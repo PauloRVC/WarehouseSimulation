@@ -96,9 +96,10 @@ namespace SimulationObjects.Distributions
 
             return distributions;
         }
-        public IndependentInterarrivalBatchSizeDist BuildInterarrivalBatchSizeDist(List<DateTime> selectedDays, 
+        public IDistribution<InterarrivalBatchSize> BuildInterarrivalBatchSizeDist(List<DateTime> selectedDays, 
                                                                                    int anomolyLimit,
-                                                                                   Tuple<TimeSpan, TimeSpan> interval)
+                                                                                   Tuple<TimeSpan, TimeSpan> interval,
+                                                                                   int startMin)
         {
             var interarrivalList = new List<int>();
             var batchSizeList = new List<int>();
@@ -120,57 +121,88 @@ namespace SimulationObjects.Distributions
                 }
 
                 int j = 0;
-                while (j < todaysInterArrivalTimes.Count)
+                if(todaysInterArrivalTimes.Count > 0)
                 {
-                    if(todaysInterArrivalTimes[j] == 0)
+                    while (todaysInterArrivalTimes[j] == 0)
                     {
-                        throw new InvalidOperationException();
+                        j++;
                     }
-                    else
+                    while (j < todaysInterArrivalTimes.Count)
                     {
-                        interarrivalList.Add(todaysInterArrivalTimes[j]);
-
-                        int k = j + 1;
-                        int batchSize = 1;
-                        while(k < todaysInterArrivalTimes.Count && todaysInterArrivalTimes[k] == 0)
+                        if (todaysInterArrivalTimes[j] == 0)
                         {
-                            batchSize++;
-                            k++;
+                            throw new InvalidOperationException();
                         }
+                        else
+                        {
+                            if(todaysInterArrivalTimes[j] < anomolyLimit)
+                            {
+                                interarrivalList.Add(todaysInterArrivalTimes[j]);
 
-                        batchSizeList.Add(batchSize);
+                                int k = j + 1;
+                                int batchSize = 1;
+                                while (k < todaysInterArrivalTimes.Count && todaysInterArrivalTimes[k] == 0)
+                                {
+                                    batchSize++;
+                                    k++;
+                                }
 
-                        j = k;
+                                batchSizeList.Add(batchSize);
+
+                                j = k;
+                            }
+                            else
+                            {
+                                int k = j + 1;
+                                while (k < todaysInterArrivalTimes.Count && todaysInterArrivalTimes[k] == 0)
+                                {
+                                    k++;
+                                }
+                                j = k;
+                            }
+                            
+                        }
                     }
                 }
             }
 
-            var allArrivalObservations = interarrivalList.Where(x => x < anomolyLimit);
+            var allArrivalObservations = interarrivalList.ToList();
+
             var allBatchSizeObservations = batchSizeList;
 
-            if (allArrivalObservations.Any(x => x <= 0))
-                throw new InvalidOperationException();
-            if (allBatchSizeObservations.Any(x => x <= 0))
-                throw new InvalidOperationException();
-
-            int arrivalObsCount = allArrivalObservations.Count();
-            int batchSizeObsCount = allBatchSizeObservations.Count();
-
-            var arrivalProbs = allArrivalObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / arrivalObsCount, x.Key)).ToList();
-            var batchSizeProbs = allBatchSizeObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / batchSizeObsCount, x.Key)).ToList();
-
-            if (arrivalProbs.Count == 0 || batchSizeProbs.Count == 0)
+            if(allArrivalObservations.Count() > 0)
             {
-                throw new InvalidOperationException();
+                if (allArrivalObservations.Any(x => x <= 0))
+                    throw new InvalidOperationException();
+                if (allBatchSizeObservations.Any(x => x <= 0))
+                    throw new InvalidOperationException();
+
+                int arrivalObsCount = allArrivalObservations.Count();
+                int batchSizeObsCount = allBatchSizeObservations.Count();
+
+                var arrivalProbs = allArrivalObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / arrivalObsCount, x.Key)).ToList();
+                var batchSizeProbs = allBatchSizeObservations.GroupBy(x => x).Select(x => new Tuple<double, int>((double)x.Count() / batchSizeObsCount, x.Key)).ToList();
+
+                if (arrivalProbs.Count == 0 || batchSizeProbs.Count == 0)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                if (arrivalProbs.Select(x => x.Item1).Sum() < 0.99 || batchSizeProbs.Select(x => x.Item1).Sum() < 0.99)
+                    throw new InvalidOperationException();
+
+                var arrivalDist = new EmpiricalDist(arrivalProbs);
+                var batchSizeDist = new EmpiricalDist(batchSizeProbs);
+
+                return new IndependentInterarrivalBatchSizeDist(arrivalDist, batchSizeDist);
             }
-
-            if (arrivalProbs.Select(x => x.Item1).Sum() < 0.99 || batchSizeProbs.Select(x => x.Item1).Sum() < 0.99)
-                throw new InvalidOperationException();
-
-            var arrivalDist = new EmpiricalDist(arrivalProbs);
-            var batchSizeDist = new EmpiricalDist(batchSizeProbs);
-
-            return new IndependentInterarrivalBatchSizeDist(arrivalDist, batchSizeDist);
+            else
+            {
+                int endOfIntervalSecond = (int)interval.Item2.TotalSeconds;
+                int startSecond = startMin * 60;
+                return new NoArrivalDist(endOfIntervalSecond - startSecond);
+            }
+            
         }
         public ConditionalInterarrivalBatchSizeDist BuildConditionalInterarrivalBatchSizeDist(List<DateTime> selectedDays,
                                                                                    int anomolyLimit,
@@ -559,6 +591,28 @@ namespace SimulationObjects.Distributions
                     t.Add((int)times[i].Subtract(times[i - 1]).TotalSeconds);
             }
             return t;
+        }
+        public Dictionary<int, IDistribution<InterarrivalBatchSize>>
+            BuildIntervalMultiArrivalDists(List<Tuple<TimeSpan, TimeSpan>> periods,
+                                            List<DateTime> selectedDays,
+                                            int anomolyLimit,
+                                            int startMin)
+        {
+            var scanner901 = data.Scanner901;
+
+            var distributions = new Dictionary<int, IDistribution<InterarrivalBatchSize>>();
+
+            for (int k = 0; k < periods.Count; k++)
+            {
+                
+                var interval = periods[k];
+                var dist = BuildInterarrivalBatchSizeDist(selectedDays, anomolyLimit, interval, startMin);
+
+                int InvervalStartSecond = (int)(60 * (interval.Item1.TotalMinutes - startMin));
+                distributions.Add(InvervalStartSecond, dist);
+            }
+            
+            return distributions;
         }
 
 

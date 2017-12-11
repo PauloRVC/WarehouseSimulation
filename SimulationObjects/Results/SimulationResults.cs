@@ -7,6 +7,7 @@ using SimulationObjects.Entities;
 using SimulationObjects.Resources;
 using SimulationObjects.SimBlocks;
 using Infrastructure;
+using SimulationObjects.Events;
 
 namespace SimulationObjects.Results
 {
@@ -310,6 +311,49 @@ namespace SimulationObjects.Results
         public Dictionary<int, int> OutputTimedQueueSize()
         {
             return TimedQueueSizeOverTime;
+        }
+        public Dictionary<int, int> OutputCumulativeArrivalsOverTime()
+        {
+            var CumulativeArrivals = new Dictionary<int, int>();
+
+            foreach(var p in ArrivalTimes)
+            {
+                if (CumulativeArrivals.ContainsKey(p.Value))
+                {
+                    //if(p.Key.CurrentEvent.GetType() == typeof(MultiArrival))
+                    //{
+                    //    var ev = (MultiArrival)(p.Key.CurrentEvent);
+                    //    CumulativeArrivals[p.Value] += ev.Arrivals.Count;
+                    //}
+                    //else
+                    //{
+                    //    CumulativeArrivals[p.Value]++;
+                    //}
+                    CumulativeArrivals[p.Value]++;
+                }
+                else
+                {
+                    //if (p.Key.CurrentEvent.GetType() == typeof(MultiArrival))
+                    //{
+                    //    var ev = (MultiArrival)(p.Key.CurrentEvent);
+                    //    CumulativeArrivals[p.Value] += ev.Arrivals.Count;
+                    //}
+                    //else
+                    //{
+                    //    CumulativeArrivals[p.Value]++;
+                    //}
+                    CumulativeArrivals.Add(p.Value, 1);
+                }
+            }
+
+            var keys = CumulativeArrivals.Keys.OrderBy(x => x).ToList();
+
+            for (int i = 1; i < CumulativeArrivals.Count; i++)
+            {
+                CumulativeArrivals[keys[i]] = CumulativeArrivals[keys[i]] + CumulativeArrivals[keys[i - 1]];
+            }
+
+            return CumulativeArrivals;
         }
     }
 }

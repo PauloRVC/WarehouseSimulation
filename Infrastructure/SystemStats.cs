@@ -16,6 +16,7 @@ namespace Infrastructure
         public Dictionary<ProcessType, double> AvgNumTimesRecirc { get; private set; }
         public Dictionary<ProcessType, int> ArrivalCount { get; set; }
         public int ExitCount { get; set; }
+        public Dictionary<int, int> CumulativeArrivalCount { get; set; }
 
         public ILogger Logger = new NullLogger();
 
@@ -98,6 +99,8 @@ namespace Infrastructure
             AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
                                     sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
             AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+
+            CumulativeArrivalCount = CalcCumArrivalCount(data, day, interval);
         }
         public SystemStats(DateTime day, double anomolyLimit, Tuple<TimeSpan, TimeSpan> interval, ILogger logger)
         {
@@ -129,6 +132,8 @@ namespace Infrastructure
             AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
                                     sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
             AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+
+            CumulativeArrivalCount = CalcCumArrivalCount(data, day, interval);
         }
         public SystemStats(DateTime day, double anomolyLimit, Tuple<TimeSpan, TimeSpan> interval, ILogger logger, WarehouseDataType wDataType)
         {
@@ -152,14 +157,18 @@ namespace Infrastructure
 
             AvgNumTimesRecirc = new Dictionary<ProcessType, double>();
             AvgNumTimesRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x => Math.Max(0, x.Item2.Where(y => y.Item1 == data.P06.LocationID).Count() - 1)).Average());
-            AvgNumTimesRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => Math.Max(0, x.Item2.Count - 1)).Average());
+            AvgNumTimesRecirc.Add(ProcessType.NonPutwall,
+                nonPutwallRecircGroups.Count() > 0 ? nonPutwallRecircGroups.Select(x => Math.Max(0, x.Item2.Count - 1)).Average():0);
 
             Logger.LogDistribution("RecircDist_Real", putWallRecircGroups.Select(x =>
                                     (int)sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).ToList());
             AvgTimeRecirc = new Dictionary<ProcessType, double>();
             AvgTimeRecirc.Add(ProcessType.Putwall, putWallRecircGroups.Select(x =>
                                     sumDateDiffs(x.Item2.Where(y => y.Item1 == data.P06.LocationID).Select(y => y.Item2).ToList(), anomolyLimit)).Average());
-            AvgTimeRecirc.Add(ProcessType.NonPutwall, nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average());
+            AvgTimeRecirc.Add(ProcessType.NonPutwall,
+                nonPutwallRecircGroups.Count() > 0 ? nonPutwallRecircGroups.Select(x => sumDateDiffs(x.Item2.Select(y => y.Item2).ToList(), anomolyLimit)).Average(): 0);
+
+            CumulativeArrivalCount = CalcCumArrivalCount(data, day, interval);
         }
         private double sumDateDiffs(List<DateTime> times)
         {
@@ -271,6 +280,37 @@ namespace Infrastructure
 
             return firstPutTimes.Where(x => lastArrivals.Select(y => y.BatchID).Contains(x.Item1)).
                                         Select(x => x.Item2.Subtract(lastArrivals.Where(y => y.BatchID == x.Item1).FirstOrDefault().Timestamp).TotalSeconds).Average();
+        }
+        private Dictionary<int, int> CalcCumArrivalCount(WarehouseData data, DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var CumArrivalCount = new Dictionary<int, int>();
+
+            var arrivals = data.FirstArrivals(data.Scanner901, day).
+                            Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                            x.Timestamp.TimeOfDay <= interval.Item2).ToList();
+
+            foreach(var arv in arrivals)
+            {
+                int t = (int)arv.Timestamp.TimeOfDay.Subtract(interval.Item1).TotalSeconds;
+
+                if (CumArrivalCount.ContainsKey(t))
+                {
+                    CumArrivalCount[t]++;
+                }
+                else
+                {
+                    CumArrivalCount.Add(t, 1);
+                }
+            }
+
+            var keys = CumArrivalCount.Keys.OrderBy(x => x).ToList();
+
+            for(int i = 1; i < CumArrivalCount.Count; i++)
+            {
+                CumArrivalCount[keys[i]] = CumArrivalCount[keys[i]] + CumArrivalCount[keys[i - 1]];
+            }
+
+            return CumArrivalCount;
         }
 
     }

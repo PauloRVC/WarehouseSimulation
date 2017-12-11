@@ -219,6 +219,8 @@ namespace SimulationObjects.Utils
             var dbStats = new SystemStats(day, anomolyLimit, interval, this, wDataType);
 
             WriteDBStatsToFile(name, dbStats);
+
+            LogPutsPerHour("Cumulative_Arrivals_Real", dbStats.CumulativeArrivalCount);
         }
         private void WriteDBStatsToFile(string name, SystemStats dbStats)
         {

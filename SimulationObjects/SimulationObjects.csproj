@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="Distributions\JointInterarrivalDist.cs" />
     <Compile Include="Distributions\NewDistBuilder.cs" />
+    <Compile Include="Distributions\NoArrivalDist.cs" />
     <Compile Include="Entities\IEntity.cs" />
     <Compile Include="Events\Arrival.cs" />
     <Compile Include="Events\EndQueueEvent.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="SimBlocks\ArrivalBlocks\InterarrivalBlockWithBreaks.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\IntervalArrivalBlock.cs" />
     <Compile Include="SimBlocks\ArrivalBlocks\MultiArrivalBlock.cs" />
+    <Compile Include="SimBlocks\ArrivalBlocks\MultiArrivalBlockWithPartitionedDist.cs" />
     <Compile Include="SimBlocks\DisposalBlock.cs" />
     <Compile Include="Distributions\EmpiricalDist.cs" />
     <Compile Include="Events\EndProcessEvent.cs" />

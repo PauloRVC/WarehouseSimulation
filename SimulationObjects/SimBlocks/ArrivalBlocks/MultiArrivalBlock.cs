@@ -12,10 +12,10 @@ namespace SimulationObjects.SimBlocks.ArrivalBlocks
 {
     public class MultiArrivalBlock: SimBlock, IArrivalBlock
     {
-        private IDistribution<InterarrivalBatchSize> MultiArrivalDist;
-        private IDistribution<IDestinationBlock> DestinationDist;
-        private List<Tuple<int, int>> Breaks;
-        private IDestinationBlock P06;
+        protected IDistribution<InterarrivalBatchSize> MultiArrivalDist;
+        protected IDistribution<IDestinationBlock> DestinationDist;
+        protected List<Tuple<int, int>> Breaks;
+        protected IDestinationBlock P06;
 
         public MultiArrivalBlock(IDistribution<InterarrivalBatchSize> multiArrivalDist,
                             IDistribution<IDestinationBlock> destinationDist,
@@ -28,7 +28,7 @@ namespace SimulationObjects.SimBlocks.ArrivalBlocks
             DestinationDist = destinationDist;
             P06 = p06;
         }
-        public IEvent GetNextEvent()
+        public virtual IEvent GetNextEvent()
         {
             var multiArrival = MultiArrivalDist.DrawNext();
 

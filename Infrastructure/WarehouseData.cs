@@ -592,18 +592,20 @@ namespace Infrastructure
         }
         public Dictionary<int, Tuple<int, int>> RecirculationVSQueueSize(DateTime day, List<DateTime> qData, Tuple<TimeSpan, TimeSpan> interval)
         {
+            var DB = new WarehouseContext();
+
             var RecircVsQSize = new Dictionary<int, Tuple<int, int>>();
 
             int[] qSizeOverTime = GetQueueSizeOverTime(qData, day);
 
             var dates = qData.Select(x => x.Date).ToList();
             
-            var recircs = db.BatchScan.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID
+            var recircs = DB.BatchScan.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID
                                             && dates.Contains(DbFunctions.TruncateTime(x.Timestamp).Value)
                                             && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
                                             && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2).
                                             GroupBy(x => x.BatchID).ToDictionary(x => x.Key, x => x.Where(y => y.Timestamp != x.Max(z => z.Timestamp))).SelectMany(x => x.Value);
-            var nonRecircs = db.BatchScan.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID
+            var nonRecircs = DB.BatchScan.Where(x => x.CurrentLocation.LocationID == db.Scanner901.LocationID
                                             && dates.Contains(DbFunctions.TruncateTime(x.Timestamp).Value)
                                             && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) >= interval.Item1
                                             && DbFunctions.CreateTime(x.Timestamp.Hour, x.Timestamp.Minute, x.Timestamp.Second) <= interval.Item2).
@@ -653,23 +655,133 @@ namespace Infrastructure
             {
                 int putsPerBlock = unSmoothed[i] / nBlocks;
 
-                for (int j = 0; j < nBlocks - 1; j++)
+                for (int j = 0; j < nBlocks; j++)
                 {
                     smoothed.Add(i * outerInterval + j * innerInterval, putsPerBlock);
                 }
-                if (unSmoothed[i] % nBlocks == 0)
+                if (unSmoothed[i] % nBlocks != 0)
                 {
-                    smoothed.Add(i * outerInterval + (nBlocks - 1) * innerInterval, putsPerBlock);
-                }
-                else
-                {
-                    smoothed.Add(i * outerInterval + (nBlocks - 1) * innerInterval, putsPerBlock + (unSmoothed[i] % nBlocks));
+                    for(int j=0;j< (unSmoothed[i] % nBlocks); j++)
+                    {
+                        smoothed[i * outerInterval + j * innerInterval]++;
+                    }
+                    //smoothed.Add(i * outerInterval + (nBlocks - 1) * innerInterval, putsPerBlock + (unSmoothed[i] % nBlocks));
                 }
             }
 
             return smoothed;
         }
+        public Dictionary<TimeSpan, int> CalcCumArrivalCount(DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var CumArrivalCount = new Dictionary<TimeSpan, int>();
 
+            var arrivals = FirstArrivals(Scanner901, day).
+                            Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                            x.Timestamp.TimeOfDay <= interval.Item2).ToList();
+
+            foreach (var arv in arrivals)
+            {
+                
+
+                if (CumArrivalCount.ContainsKey(arv.Timestamp.TimeOfDay))
+                {
+                    CumArrivalCount[arv.Timestamp.TimeOfDay]++;
+                }
+                else
+                {
+                    CumArrivalCount.Add(arv.Timestamp.TimeOfDay, 1);
+                }
+            }
+
+            var keys = CumArrivalCount.Keys.OrderBy(x => x).ToList();
+
+            for (int i = 1; i < CumArrivalCount.Count; i++)
+            {
+                CumArrivalCount[keys[i]] = CumArrivalCount[keys[i]] + CumArrivalCount[keys[i - 1]];
+            }
+
+            return CumArrivalCount;
+        }
+        public Dictionary<TimeSpan, double> CalcScaledCumulativeSlope(DateTime day, Tuple<TimeSpan, TimeSpan> interval, double scalar)
+        {
+            var ScaledCumulativeSlope = new Dictionary<TimeSpan, double>();
+
+            var cumulativeArrivals = CalcCumArrivalCount(day, interval);
+
+            var keys = cumulativeArrivals.Keys.OrderBy(x => x).ToList();
+            
+            for(int i = 1; i < keys.Count; i++)
+            {
+                double slope = (double)(cumulativeArrivals[keys[i]] - cumulativeArrivals[keys[i - 1]]) / 
+                                (keys[i].Subtract(keys[i - 1]).TotalSeconds);
+
+                slope *= scalar;
+
+                ScaledCumulativeSlope.Add(keys[i], slope);
+            }
+
+            return ScaledCumulativeSlope;
+        }
+        public List<Tuple<TimeSpan, TimeSpan>> DistributionBreakpoints(DateTime day, 
+                                                                       Tuple<TimeSpan, TimeSpan> interval, 
+                                                                       double scalar,
+                                                                       double slopeLimit)
+        {
+            var scaledCumulativeSlope = CalcScaledCumulativeSlope(day, interval, scalar);
+
+            var distBreakpoints = new List<Tuple<TimeSpan, TimeSpan>>();
+
+            foreach(var pair in scaledCumulativeSlope)
+            {
+                if(pair.Value >= slopeLimit)
+                {
+                    if (distBreakpoints.Count == 0)
+                    {
+                        distBreakpoints.Add(new Tuple<TimeSpan, TimeSpan>(interval.Item1, pair.Key));
+                    }
+                    else
+                    {
+                        var lastTime = distBreakpoints.Last().Item2;
+                        
+                        distBreakpoints.Add(new Tuple<TimeSpan, TimeSpan>(lastTime, pair.Key));
+                    }
+                }
+            }
+
+            distBreakpoints.Add(new Tuple<TimeSpan, TimeSpan>(distBreakpoints.Last().Item2, interval.Item2));
+
+            for(int i = 1; i < distBreakpoints.Count - 1; i++)
+            {
+                if(distBreakpoints[i].Item2.Subtract(distBreakpoints[i].Item1).TotalMinutes < 1)
+                {
+                    var beforeIntervalLength = distBreakpoints[i - 1].Item2.Subtract(distBreakpoints[i - 1].Item1).TotalMinutes;
+                    var afterIntervalLength = distBreakpoints[i + 1].Item2.Subtract(distBreakpoints[i + 1].Item1).TotalMinutes;
+
+                    if(beforeIntervalLength < afterIntervalLength)
+                    {
+                        var beforeInterval = distBreakpoints[i - 1];
+                        var currentInterval = distBreakpoints[i];
+                        var newInterval = new Tuple<TimeSpan, TimeSpan>(beforeInterval.Item1, currentInterval.Item2);
+
+                        distBreakpoints.Insert(i - 1, newInterval);
+                        distBreakpoints.Remove(beforeInterval);
+                        distBreakpoints.Remove(currentInterval);
+                    }
+                    else
+                    {
+                        var currentInterval = distBreakpoints[i];
+                        var afterInterval = distBreakpoints[i + 1];
+                        var newInterval = new Tuple<TimeSpan, TimeSpan>(currentInterval.Item1, afterInterval.Item2);
+
+                        distBreakpoints.Insert(i, newInterval);
+                        distBreakpoints.Remove(afterInterval);
+                        distBreakpoints.Remove(currentInterval);
+                    }
+                }
+            }
+
+            return distBreakpoints;
+        }
 
     }
 }

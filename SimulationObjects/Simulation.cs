@@ -19,7 +19,7 @@ namespace SimulationObjects
         public int EndTime { get; protected set; }
 
         public int CurrentTime { get; protected set; }
-        public SimulationResults Results { get; protected set; }
+        public SimulationResults Results { get; set; }
         public Simulation(int endTime)
         {
             CurrentTime = 0;
