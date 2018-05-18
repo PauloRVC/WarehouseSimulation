@@ -53,8 +53,8 @@ namespace WarehouseSimulation
             //SimWithConstantPOfRecirc();
             //int maxInterval = 500;
 
-            ////string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
-            string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
+            string basePath = @"C:\Users\p2decarv\Desktop\SimLog\";
+            //string basePath = @"C:\Users\Daniel\Desktop\SimLog\";
             //string basePath = @"C:\Users\Dematic\Desktop\SimLog\";
 
             //string resultsPath = basePath + "Results.txt";
@@ -79,7 +79,7 @@ namespace WarehouseSimulation
             //}
 
             //MultiArrivalIntervalSim(basePath);
-            MultiArrivalAutoIntervalSim(basePath);
+            MultiArrivalIntervalSim(basePath);
         }
         private void MultiArrivalAutoIntervalSim(string basePath)
         {
@@ -387,12 +387,39 @@ namespace WarehouseSimulation
 
             var logger = new VerboseLogger(basePath);
 
-            var intervals = new List<Tuple<TimeSpan, TimeSpan>>();
+            var intervals = new List<Tuple<TimeSpan, TimeSpan>>()
+            {
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,25200),new TimeSpan(0,0,29328)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,29328),new TimeSpan(0,0,36229)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,36229),new TimeSpan(0,0,36609)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,36609),new TimeSpan(0,0,39814)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,39814),new TimeSpan(0,0,39894)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,39894),new TimeSpan(0,0,45643)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,45643),new TimeSpan(0,0,49189)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,49189),new TimeSpan(0,0,49430)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,49430),new TimeSpan(0,0,49640)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,49640),new TimeSpan(0,0,54273)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,54273),new TimeSpan(0,0,58671)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,58671),new TimeSpan(0,0,60208)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,60208),new TimeSpan(0,0,60338)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,60338),new TimeSpan(0,0,60822)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,60822),new TimeSpan(0,0,62980)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,62980),new TimeSpan(0,0,67305)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,67305),new TimeSpan(0,0,68317)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,68317),new TimeSpan(0,0,69905)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,69905),new TimeSpan(0,0,70492)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,70492),new TimeSpan(0,0,74583)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,74583),new TimeSpan(0,0,75425)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,75425),new TimeSpan(0,0,81023)),
+                new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0,0,81023),new TimeSpan(0,0,82800)),
 
-            int ArrivalInterval = 480;
+            };
+
+            //int ArrivalInterval = 480;
             int startMin = 420;
             int dayLength = 57600;
 
+/*
             for (int i = startMin; i < (dayLength/60) + startMin; i += ArrivalInterval)
             {
                 if (((double)(i + ArrivalInterval) / 60) == 24)
@@ -408,13 +435,13 @@ namespace WarehouseSimulation
 
             }
 
-
+*/
             
-            //logger.LogDBStats("DBStats", availability.First());
+            logger.LogDBStats("DBStats", availability.First());
             //logger.LogDBStats("DBStats", availability.First(), 600);
 
 
-            int nIterations = 100;
+            int nIterations = 10;
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
             var iterations = Enumerable.Range(0, nIterations);
             

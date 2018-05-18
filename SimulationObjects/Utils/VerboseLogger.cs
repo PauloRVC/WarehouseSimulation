@@ -235,21 +235,21 @@ namespace SimulationObjects.Utils
             using (var writer = new System.IO.StreamWriter(FolderPath + @"\" + name))
             {
 
-                writer.WriteLine("Statistic \t Putwall \t NonPutwall");
+                writer.WriteLine("Statistic \t Putwall (Avg) \t Putwall (StdDev)");
 
-                writer.WriteLine("Number Created \t" + dbStats.ArrivalCount[ProcessType.Putwall] + "\t" + dbStats.ArrivalCount[ProcessType.NonPutwall]);
+                writer.WriteLine("Number Created \t" + dbStats.ArrivalCount[ProcessType.Putwall] + "\t N/A");
 
                 writer.WriteLine("Number Disposed \t" + dbStats.ExitCount + "\t N/A");
 
-                writer.WriteLine("Time in System \t" + dbStats.AvgTimeInSystem + "\t N/A");
+                writer.WriteLine("Time in System \t" + dbStats.AvgTimeInSystem + "\t" + dbStats.StdDevTimeInSystem);
 
-                writer.WriteLine("Time in Queue \t" + dbStats.AvgTimeInQueue + "\t N/A");
+                writer.WriteLine("Time in Queue \t" + dbStats.AvgTimeInQueue + "\t" + dbStats.StdDevTimeInQueue);
 
-                writer.WriteLine("Time Recirculating \t" + dbStats.AvgTimeRecirc[ProcessType.Putwall] + "\t" + dbStats.AvgTimeRecirc[ProcessType.NonPutwall]);
+                writer.WriteLine("Time Recirculating \t" + dbStats.AvgTimeRecirc[ProcessType.Putwall] + "\t" + dbStats.StdDevTimeRecirc[ProcessType.Putwall]);
 
-                writer.WriteLine("Times Recirculated \t" + dbStats.AvgNumTimesRecirc[ProcessType.Putwall] + "\t" + dbStats.AvgNumTimesRecirc[ProcessType.NonPutwall]);
+                writer.WriteLine("Times Recirculated \t" + dbStats.AvgNumTimesRecirc[ProcessType.Putwall] + "\t" + dbStats.StdDevNumTimesRecirc[ProcessType.Putwall]);
 
-                writer.WriteLine("Time in Put Process \t" + dbStats.AvgTimeInProcess + "\t N/A");
+                writer.WriteLine("Time in Put Process \t" + dbStats.AvgTimeInProcess + "\t" + dbStats.StdDevTimeInProcess);
 
             }
         }

@@ -8,7 +8,7 @@ using Infrastructure.Models;
 
 namespace Infrastructure
 {
-    internal class PutwallOnlyData: WarehouseContext
+    internal class PutwallOnlyData : WarehouseContext
     {
         internal PutwallOnlyData()
         {
@@ -18,6 +18,14 @@ namespace Infrastructure
             //PutwallBatchIDs = PutwallBatchIDs.Intersect(base.OrderItems.Where(x => x.PutTimestamp.HasValue).Select(x => x.Order.Batch.BatchID)).ToList();
         }
         private List<int> PutwallBatchIDs;
-        public override IQueryable<BatchScan> BatchScan { get => base.BatchScan.Where(x => PutwallBatchIDs.Contains(x.BatchID)); }
+        public override IQueryable<BatchScan> BatchScan
+        {
+            get
+            {
+                return base.BatchScan.Where(x => PutwallBatchIDs.Contains(x.BatchID));
+            }
+        }
     }
 }
+
+
