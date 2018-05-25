@@ -111,7 +111,7 @@ namespace WarehouseSimulation
             using(var writer = new System.IO.StreamWriter(basePath + "CumulativeArrivals_real.txt"))
             {
                 foreach (var entry in cumulativeArrival)
-                    writer.WriteLine("{0} \t {1}", entry.Key, entry.Value);
+                    writer.WriteLine("{0} \t {1}", TimeSpan.Parse(entry.Key.ToString()).TotalSeconds, entry.Value);
             }
                  
         }
