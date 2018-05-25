@@ -1,6 +1,5 @@
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.dll
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.pdb
-C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csprojResolveAssemblyReference.cache
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.dll
 C:\Users\p2decarv\documents\visual studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.pdb
 C:\Users\Daniel\Documents\GitHub\WarehouseSimulation\Infrastructure\bin\Debug\Infrastructure.dll.config
@@ -70,3 +69,4 @@ D:\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\Infrastructur
 D:\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csproj.CoreCompileInputs.cache
 D:\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.dll
 D:\Daniel\Documents\GitHub\WarehouseSimulation\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.pdb
+C:\Users\p2decarv\Documents\Visual Studio 2015\Projects\WarehouseSimulation\Infrastructure\obj\Debug\Infrastructure.csprojResolveAssemblyReference.cache

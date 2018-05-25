@@ -349,6 +349,39 @@ namespace Infrastructure
 
             return results;
         }
+
+        private Dictionary<int, int> CalcCumArrivalCount(WarehouseData data, DateTime day, Tuple<TimeSpan, TimeSpan> interval)
+        {
+            var CumArrivalCount = new Dictionary<int, int>();
+
+            var arrivals = data.FirstArrivals(data.Scanner901, day).
+                            Where(x => x.Timestamp.TimeOfDay >= interval.Item1 &
+                            x.Timestamp.TimeOfDay <= interval.Item2).ToList();
+
+            foreach (var arv in arrivals)
+            {
+                int t = (int)arv.Timestamp.TimeOfDay.Subtract(interval.Item1).TotalSeconds;
+
+                if (CumArrivalCount.ContainsKey(t))
+                {
+                    CumArrivalCount[t]++;
+                }
+                else
+                {
+                    CumArrivalCount.Add(t, 1);
+                }
+            }
+
+            var keys = CumArrivalCount.Keys.OrderBy(x => x).ToList();
+
+            for (int i = 1; i < CumArrivalCount.Count; i++)
+            {
+                CumArrivalCount[keys[i]] = CumArrivalCount[keys[i]] + CumArrivalCount[keys[i - 1]];
+            }
+
+            return CumArrivalCount;
+        }
+
         public int[] GetQueueSizeOverTime(DateTime day)
         {
             var QueueSize = new int[(int)(new TimeSpan(24, 0, 0)).TotalSeconds];

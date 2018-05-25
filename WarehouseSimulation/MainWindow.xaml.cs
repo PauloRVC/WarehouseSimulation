@@ -79,8 +79,46 @@ namespace WarehouseSimulation
             //}
 
             //MultiArrivalIntervalSim(basePath);
-            MultiArrivalIntervalSim(basePath);
+            //MultiArrivalIntervalSim(basePath);
+            GetInterArrivals(basePath);
         }
+
+        private void GetInterArrivals(string basePath)
+        {
+            var dType = WarehouseDataType.PutwallOnlyData;
+            var Data = new WarehouseData(dType);
+            var availability = new List<DateTime>()
+            {
+                new DateTime(2015,11,14)
+            };
+
+            var logger = new VerboseLogger(basePath);
+
+            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0, 0, 0), new TimeSpan(23, 59, 59));
+            
+            var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
+            using (var writer = new System.IO.StreamWriter(basePath + "InterArrivals_over_time_real.txt"))
+            {
+                writer.WriteLine("Time \t Interarrival Time");
+
+                foreach (var t in arrivalTimesOverTime)
+                {
+                    writer.WriteLine(t.Item1 + "\t" + t.Item2);
+                }
+            }
+
+            var cumulativeArrival = Data.CalcCumArrivalCount(availability[0], statsInterval);
+            using(var writer = new System.IO.StreamWriter(basePath + "CumulativeArrivals_real.txt"))
+            {
+                foreach (var entry in cumulativeArrival)
+                    writer.WriteLine("{0} \t {1}", entry.Key, entry.Value);
+            }
+                 
+        }
+
+        
+
+
         private void MultiArrivalAutoIntervalSim(string basePath)
         {
             var dType = WarehouseDataType.PutwallOnlyData;
@@ -327,13 +365,19 @@ namespace WarehouseSimulation
 
             var qSizeData = new List<DateTime>()
             {
+                new DateTime(2015,11,6),
+                new DateTime(2015,11,7),
                 new DateTime(2015,11,9),
                 new DateTime(2015,11,10),
                 new DateTime(2015,11,11),
                 new DateTime(2015,11,12),
-                new DateTime(2015,11,13)
+                new DateTime(2015,11,13),
+                new DateTime(2015,11,14),
+                new DateTime(2015,11,15),
+                new DateTime(2015,11,16)
+
             };
-            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(7, 0, 0), new TimeSpan(23, 0, 0));
+            var statsInterval = new Tuple<TimeSpan, TimeSpan>(new TimeSpan(0, 0, 1), new TimeSpan(23, 59, 59));
 
             var arrivalTimesOverTime = Data.GetInterarrivalTimesOverTime(availability[0]);
             var recircTimesOverTime = Data.GetItemsInRecircOverTime(availability[0]);
@@ -441,7 +485,7 @@ namespace WarehouseSimulation
             //logger.LogDBStats("DBStats", availability.First(), 600);
 
 
-            int nIterations = 10;
+            int nIterations = 1;
             List<Tuple<int, int>> throughput = new List<Tuple<int, int>>();
             var iterations = Enumerable.Range(0, nIterations);
             
